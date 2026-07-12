@@ -1,0 +1,11 @@
+body {
+    font-family: sans-serif;
+    max-width: 700px;
+    margin: 40px auto;
+}
+nav a {
+    margin-right: 10px;
+}
+li s {
+    color: gray;
+}

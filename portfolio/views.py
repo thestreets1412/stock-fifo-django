@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView, FormView
 from django.urls import reverse_lazy
-from .models import Symbol, StockLot
+from .models import Symbol, StockLot, Sale
 from .forms import StockLotForm, SellForm
 from .services import record_sale, InsufficientLotsError
 
@@ -56,3 +56,28 @@ class SellView(LoginRequiredMixin, FormView):
             return self.form_invalid(form)
 
         return super().form_valid(form)
+    
+class SaleListView(LoginRequiredMixin, ListView):
+    model = Sale
+    template_name = 'portfolio/sale_list.html'
+    context_object_name = 'sales'
+
+    def get_queryset(self):
+        queryset = (
+            Sale.objects
+            .filter(owner=self.request.user)
+            .select_related('symbol')
+            .prefetch_related('allocations__lot')
+        )
+
+        symbol_id = self.request.GET.get('symbol')
+        if symbol_id:
+            queryset = queryset.filter(symbol_id=symbol_id)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['symbols'] = Symbol.objects.all()
+        context['selected_symbol_id'] = self.request.GET.get('symbol', '')
+        return context

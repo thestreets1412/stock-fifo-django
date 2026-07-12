@@ -1,0 +1,64 @@
+{% extends 'portfolio/base.html' %}
+
+{% block title %}Sell History{% endblock %}
+
+{% block content %}
+<h1>Sell History</h1>
+
+<form method="get">
+    <label for="symbol">Symbol:</label>
+    <select name="symbol" id="symbol" onchange="this.form.submit()">
+        <option value="">-- All Symbols --</option>
+        {% for symbol in symbols %}
+            <option value="{{ symbol.id }}" {% if selected_symbol_id|stringformat:"s" == symbol.id|stringformat:"s" %}selected{% endif %}>
+                {{ symbol.ticker }}
+            </option>
+        {% endfor %}
+    </select>
+</form>
+
+<table border="1" cellpadding="6">
+    <thead>
+        <tr>
+            <th>Symbol</th>
+            <th>Sell Date</th>
+            <th>Qty Sold</th>
+            <th>Sale Price (USD)</th>
+            <th>Fee (USD)</th>
+            <th>Proceeds (THB)</th>
+            <th>Cost Basis (THB)</th>
+            <th>Capital Gain (THB)</th>
+            <th>Lots Affected</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sale in sales %}
+        <tr>
+            <td>{{ sale.symbol.ticker }}</td>
+            <td>{{ sale.sell_date }}</td>
+            <td>{{ sale.qty_sold }}</td>
+            <td>{{ sale.sale_price_usd }}</td>
+            <td>{{ sale.fee_usd }}</td>
+            <td>{{ sale.proceeds_thb|floatformat:2 }}</td>
+            <td>{{ sale.total_cost_basis_thb|floatformat:2 }}</td>
+            <td>
+                {% if sale.capital_gain_thb >= 0 %}
+                    {{ sale.capital_gain_thb|floatformat:2 }}
+                {% else %}
+                    <span style="color: red;">{{ sale.capital_gain_thb|floatformat:2 }}</span>
+                {% endif %}
+            </td>
+            <td>
+                <ul>
+                    {% for allocation in sale.allocations.all %}
+                        <li>{{ allocation.lot.buy_date }} &mdash; {{ allocation.qty_allocated }} shares</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9">No sales recorded yet.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

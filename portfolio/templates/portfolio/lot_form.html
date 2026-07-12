@@ -1,0 +1,10 @@
+{% extends 'portfolio/base.html' %}
+{% block title %}Record Buy{% endblock%}
+{% block content %}
+<h1>Record a Buy</h1>
+<form method="post">
+    {% csrf_token%}
+    {{form.as_p}}
+    <button type="submit">Save</button>
+</form>
+{% endblock %}

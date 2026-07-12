@@ -1,0 +1,17 @@
+{% extends 'portfolio/base.html' %}
+{% block title %}Record Sell{% endblock%}
+{% block content %}
+<h1>Record a Sell</h1>
+
+{% if form.non_field_errors %}
+    <div style="color: red;">
+        {{ form.non_field_errors }}
+    </div>
+{% endif %}
+
+<form method="post">
+    {% csrf_token%}
+    {{form.as_p}}
+    <button type="submit">Sell (FIFO)</button>
+</form>
+{% endblock %}

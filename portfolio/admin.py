@@ -14,12 +14,12 @@ class SaleAllocationInline(admin.TabularInline):
 
 @admin.register(StockLot)
 class StockLotAdmin(admin.ModelAdmin):
-    list_display = ['symbol', 'buy_date', 'qty', 'price_usd', 'qty_remaining', 'owner']
+    list_display = ['symbol', 'buy_date', 'qty', 'price_usd', 'qty_remaining', 'owner', 'evidence']
     list_filter = ['symbol', 'owner']
     ordering = ['symbol', 'buy_date']
 
 @admin.register(Sale)
 class SaleAdmin(admin.ModelAdmin):
-    list_display = ['symbol', 'sell_date', 'qty_sold', 'sale_price_usd', 'owner']
+    list_display = ['symbol', 'sell_date', 'qty_sold', 'sale_price_usd', 'owner', 'evidence']
     list_filter = ['symbol', 'owner']
     inlines = [SaleAllocationInline]

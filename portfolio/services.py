@@ -10,7 +10,9 @@ class InsufficientLotsError(Exception):
 
 
 @transaction.atomic
-def record_sale(*, owner, symbol, sell_date, qty_sold, sale_price_usd, fee_usd, fx_rate_usd_thb):
+def record_sale(*, owner, symbol, sell_date, qty_sold, 
+                sale_price_usd, fee_usd, fx_rate_usd_thb, 
+                evidence=None):
     """
     Creates a Sale and allocates it against StockLots oldest-first (FIFO).
     Returns the created Sale instance.
@@ -35,6 +37,7 @@ def record_sale(*, owner, symbol, sell_date, qty_sold, sale_price_usd, fee_usd, 
         sale_price_usd=sale_price_usd,
         fee_usd=fee_usd,
         fx_rate_usd_thb=fx_rate_usd_thb,
+        evidence = evidence,
     )
 
     remaining_to_allocate = qty_sold

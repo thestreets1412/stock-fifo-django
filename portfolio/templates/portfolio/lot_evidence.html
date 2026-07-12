@@ -1,0 +1,11 @@
+{% extends 'portfolio/base.html' %}
+{% block title %}Buy Evidence{% endblock %}
+{% block content %}
+<h1>Evidence — {{ lot.symbol.ticker }} lot ({{ lot.buy_date }})</h1>
+{% if lot.evidence %}
+    <img src="{{ lot.evidence.url }}" alt="Buy evidence" style="max-width: 600px;">
+{% else %}
+    <p>No evidence uploaded for this lot.</p>
+{% endif %}
+<p><a href="{% url 'lot_list' %}">Back to Lots</a></p>
+{% endblock %}

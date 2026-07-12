@@ -6,4 +6,6 @@ urlpatterns = [
     path('buy/', views.StockLotCreateView.as_view(), name = 'lot_create'),
     path('sell/', views.SellView.as_view(), name = 'sell_create'),
     path('sales/', views.SaleListView.as_view(), name = 'sale_list'),
+    path('lots/<int:pk>/evidence/', views.LotEvidenceView.as_view(), name = 'lot_evidence'),
+    path('sales/<int:pk>/evidence/', views.SaleEvidenceView.as_view(), name = 'sale_evidence'),
 ]

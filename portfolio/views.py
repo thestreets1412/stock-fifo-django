@@ -1,12 +1,28 @@
 from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, CreateView, FormView
+from django.views.generic import ListView, CreateView, FormView, DetailView
 from django.urls import reverse_lazy
 from .models import Symbol, StockLot, Sale
 from .forms import StockLotForm, SellForm
 from .services import record_sale, InsufficientLotsError
 
 # Create your views here.
+class LotEvidenceView(LoginRequiredMixin, DetailView):
+    model = StockLot
+    template_name = 'portfolio/lot_evidence.html'
+    context_object_name = 'lot'
+
+    def get_queryset(self):
+        return StockLot.objects.filter(owner = self.request.user)
+    
+class SaleEvidenceView(LoginRequiredMixin, DetailView):
+    model = Sale
+    template_name = 'portfolio/sale_evidence.html'
+    context_object_name = 'sale'
+
+    def get_queryset(self):
+        return Sale.objects.filter(owner = self.request.user)
+
 class LotListView(LoginRequiredMixin, ListView):
     model = StockLot
     template_name = 'portfolio/lot_list.html'
@@ -50,6 +66,7 @@ class SellView(LoginRequiredMixin, FormView):
                 sale_price_usd=form.cleaned_data['sale_price_usd'],
                 fee_usd=form.cleaned_data['fee_usd'],
                 fx_rate_usd_thb=form.cleaned_data['fx_rate_usd_thb'],
+                evidence=form.cleaned_data['evidence'],
             )
         except InsufficientLotsError as e:
             form.add_error(None, str(e))

@@ -29,6 +29,7 @@
             <th>Cost Basis (THB)</th>
             <th>Capital Gain (THB)</th>
             <th>Lots Affected</th>
+            <th>Evidence</th>
         </tr>
     </thead>
     <tbody>
@@ -54,6 +55,13 @@
                         <li>{{ allocation.lot.buy_date }} &mdash; {{ allocation.qty_allocated }} shares</li>
                     {% endfor %}
                 </ul>
+            </td>
+            <td>
+                {% if sale.evidence %}
+                    <a href="{% url 'sale_evidence' sale.pk %}">View</a>
+                {% else %}
+                    —
+                {% endif %}
             </td>
         </tr>
         {% empty %}

@@ -27,6 +27,7 @@
             <th>Qty Remaining</th>
             <th>FX Rate</th>
             <th>Cost (THB)</th>
+            <th>Evidence</th>
         </tr>
     </thead>
     <tbody>
@@ -45,6 +46,13 @@
             </td>
             <td>{{ lot.fx_rate_usd_thb }}</td>
             <td>{{ lot.cost_thb|floatformat:2 }}</td>
+            <td>
+                {% if lot.evidence %}
+                    <a href="{% url 'lot_evidence' lot.pk %}">View</a>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
         </tr>
         {% empty %}
         <tr><td colspan="7">No lots found.</td></tr>

@@ -28,6 +28,7 @@ class StockLot(models.Model):
     qty = models.DecimalField(max_digits=18, decimal_places=8)
     fx_rate_usd_thb = models.DecimalField(max_digits=10, decimal_places=4)
     created_at = models.DateTimeField(auto_now_add=True)
+    evidence = models.ImageField(upload_to='lot_evidence/', blank=True, null=True)
 
     class Meta:
         ordering = ['buy_date', 'created_at']  # FIFO order lives right here
@@ -58,6 +59,7 @@ class Sale(models.Model):
     fee_usd = models.DecimalField(max_digits=10, decimal_places=4, default=0)
     fx_rate_usd_thb = models.DecimalField(max_digits=10, decimal_places=4)
     created_at = models.DateTimeField(auto_now_add=True)
+    evidence = models.ImageField(upload_to='sale_evidence/', blank=True, null=True)
 
     class Meta:
         ordering = ['-sell_date']

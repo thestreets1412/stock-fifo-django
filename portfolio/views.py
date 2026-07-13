@@ -2,9 +2,15 @@ from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView, FormView, DetailView
 from django.urls import reverse_lazy
+from django.http import JsonResponse
+from django.template.loader import render_to_string
 from .models import Symbol, StockLot, Sale
 from .forms import StockLotForm, SellForm
 from .services import record_sale, InsufficientLotsError
+
+
+def is_ajax(request):
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
 # Create your views here.
 class LotEvidenceView(LoginRequiredMixin, DetailView):
@@ -39,6 +45,7 @@ class LotListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['symbols'] = Symbol.objects.all()
         context['selected_symbol_id'] = self.request.GET.get('symbol', '')
+        context['form'] = StockLotForm()
         return context
 
 class StockLotCreateView(LoginRequiredMixin, CreateView):
@@ -49,8 +56,21 @@ class StockLotCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.owner = self.request.user
-        return super().form_valid(form)
-    
+        response = super().form_valid(form)
+        if is_ajax(self.request):
+            return JsonResponse({'success': True, 'redirect_url': str(self.get_success_url())})
+        return response
+
+    def form_invalid(self, form):
+        if is_ajax(self.request):
+            html = render_to_string(
+                'portfolio/partials/lot_form.html',
+                {'form': form, 'ajax': True},
+                request=self.request,
+            )
+            return JsonResponse({'success': False, 'html': html}, status=400)
+        return super().form_invalid(form)
+
 class SellView(LoginRequiredMixin, FormView):
     form_class = SellForm
     template_name = 'portfolio/sell_form.html'
@@ -72,7 +92,20 @@ class SellView(LoginRequiredMixin, FormView):
             form.add_error(None, str(e))
             return self.form_invalid(form)
 
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        if is_ajax(self.request):
+            return JsonResponse({'success': True, 'redirect_url': str(self.get_success_url())})
+        return response
+
+    def form_invalid(self, form):
+        if is_ajax(self.request):
+            html = render_to_string(
+                'portfolio/partials/sell_form.html',
+                {'form': form, 'ajax': True},
+                request=self.request,
+            )
+            return JsonResponse({'success': False, 'html': html}, status=400)
+        return super().form_invalid(form)
     
 class SaleListView(LoginRequiredMixin, ListView):
     model = Sale
@@ -97,4 +130,5 @@ class SaleListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['symbols'] = Symbol.objects.all()
         context['selected_symbol_id'] = self.request.GET.get('symbol', '')
+        context['form'] = SellForm()
         return context

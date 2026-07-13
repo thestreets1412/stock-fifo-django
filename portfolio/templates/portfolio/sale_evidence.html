@@ -1,11 +1,15 @@
 {% extends 'portfolio/base.html' %}
 {% block title %}Sell Evidence{% endblock %}
 {% block content %}
-<h1>Evidence — {{ sale.symbol.ticker }} sale ({{ sale.sell_date }})</h1>
-{% if sale.evidence %}
-    <img src="{{ sale.evidence.url }}" alt="Sell evidence" style="max-width: 600px;">
-{% else %}
-    <p>No evidence uploaded for this sale.</p>
-{% endif %}
-<p><a href="{% url 'sale_list' %}">Back to Sell History</a></p>
+<h1 class="mb-4">Evidence &mdash; {{ sale.symbol.ticker }} sale ({{ sale.sell_date }})</h1>
+<div class="card mb-3" style="max-width: 600px;">
+    {% if sale.evidence %}
+        <img src="{{ sale.evidence.url }}" alt="Sell evidence" class="img-fluid card-img">
+    {% else %}
+        <div class="card-body">
+            <p class="card-text text-muted mb-0">No evidence uploaded for this sale.</p>
+        </div>
+    {% endif %}
+</div>
+<a href="{% url 'sale_list' %}" class="btn btn-outline-secondary">Back to Sell History</a>
 {% endblock %}

@@ -1,12 +1,13 @@
 from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, CreateView, FormView, DetailView
+from django.views.generic import ListView, CreateView, FormView, DetailView, View
 from django.urls import reverse_lazy
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.template.loader import render_to_string
 from .models import Symbol, StockLot, Sale
 from .forms import StockLotForm, SellForm
-from .services import record_sale, InsufficientLotsError
+from .services import record_sale, InsufficientLotsError, get_user_lots, get_user_sales, build_fifo_report
+from . import reports
 
 
 def is_ajax(request):
@@ -35,12 +36,8 @@ class LotListView(LoginRequiredMixin, ListView):
     context_object_name = 'lots'
 
     def get_queryset(self):
-        queryset = StockLot.objects.filter(owner = self.request.user).select_related('symbol')
-        symbol_id = self.request.GET.get('symbol')
-        if symbol_id:
-            queryset = queryset.filter(symbol_id = symbol_id)
-        return queryset
-    
+        return get_user_lots(self.request.user, self.request.GET.get('symbol'))
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['symbols'] = Symbol.objects.all()
@@ -113,18 +110,7 @@ class SaleListView(LoginRequiredMixin, ListView):
     context_object_name = 'sales'
 
     def get_queryset(self):
-        queryset = (
-            Sale.objects
-            .filter(owner=self.request.user)
-            .select_related('symbol')
-            .prefetch_related('allocations__lot')
-        )
-
-        symbol_id = self.request.GET.get('symbol')
-        if symbol_id:
-            queryset = queryset.filter(symbol_id=symbol_id)
-
-        return queryset
+        return get_user_sales(self.request.user, self.request.GET.get('symbol'))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -132,3 +118,14 @@ class SaleListView(LoginRequiredMixin, ListView):
         context['selected_symbol_id'] = self.request.GET.get('symbol', '')
         context['form'] = SellForm()
         return context
+
+class PortfolioReportView(LoginRequiredMixin, View):
+    def get(self, request):
+        fmt = request.GET.get('format', 'csv')
+        sections = build_fifo_report(request.user, request.GET.get('symbol'))
+
+        if fmt == 'pdf':
+            return reports.fifo_report_pdf_response('fifo_portfolio_report.pdf', sections)
+        if fmt == 'csv':
+            return reports.fifo_report_csv_response('fifo_portfolio_report.csv', sections)
+        return HttpResponseBadRequest('Unknown report format.')

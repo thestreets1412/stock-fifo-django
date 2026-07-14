@@ -1,7 +1,7 @@
 {% extends 'portfolio/base.html' %}
 {% block title %}Sell Evidence{% endblock %}
 {% block content %}
-<h1 class="mb-4">Evidence &mdash; {{ sale.symbol.ticker }} sale ({{ sale.sell_date }})</h1>
+<h1 class="mb-4"><i class="bi bi-image me-2"></i>Evidence &mdash; {{ sale.symbol.ticker }} sale ({{ sale.sell_date }})</h1>
 <div class="card mb-3" style="max-width: 600px;">
     {% if sale.evidence %}
         <img src="{{ sale.evidence.url }}" alt="Sell evidence" class="img-fluid card-img">

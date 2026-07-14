@@ -1,8 +1,25 @@
+@import url("tokens/colors.css");
+@import url("tokens/typography.css");
+@import url("tokens/spacing.css");
+
 .navbar-brand {
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
 }
 body {
-    font-family: sans-serif;
+    font-family: var(--font-sans);
     width: auto !important;
     margin: 40px auto;
+}
+
+/* GainLossBadge — green for gain, red for loss, tabular figures so a column
+   of THB amounts lines up. Mirrors reports.py's GAIN_COLOR / LOSS_COLOR. */
+.value-gain,
+.value-loss {
+    font-variant-numeric: tabular-nums;
+}
+.value-gain {
+    color: var(--gain);
+}
+.value-loss {
+    color: var(--loss);
 }

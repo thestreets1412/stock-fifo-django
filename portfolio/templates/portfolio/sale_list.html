@@ -11,11 +11,11 @@
                 FIFO Report
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="{% url 'fifo_report' %}?format=csv{% if selected_symbol_id %}&symbol={{ selected_symbol_id }}{% endif %}">Download CSV</a></li>
-                <li><a class="dropdown-item" href="{% url 'fifo_report' %}?format=pdf{% if selected_symbol_id %}&symbol={{ selected_symbol_id }}{% endif %}">Download PDF</a></li>
+                <li><a class="dropdown-item" href="{% url 'fifo_report' %}?format=csv{% if selected_symbol_id %}&symbol={{ selected_symbol_id }}{% endif %}"><i class="bi bi-filetype-csv me-2"></i>Download CSV</a></li>
+                <li><a class="dropdown-item" href="{% url 'fifo_report' %}?format=pdf{% if selected_symbol_id %}&symbol={{ selected_symbol_id }}{% endif %}"><i class="bi bi-file-earmark-pdf me-2"></i>Download PDF</a></li>
             </ul>
         </div>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sellModal">Record Sell</button>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sellModal"><i class="bi bi-graph-up-arrow me-1"></i>Record Sell</button>
     </div>
 </div>
 
@@ -63,9 +63,9 @@
                 <td>{{ sale.total_cost_basis_thb|floatformat:2 }}</td>
                 <td>
                     {% if sale.capital_gain_thb >= 0 %}
-                        <span class="text-success">{{ sale.capital_gain_thb|floatformat:2 }}</span>
+                        <span class="value-gain">+{{ sale.capital_gain_thb|floatformat:2 }}</span>
                     {% else %}
-                        <span class="text-danger">{{ sale.capital_gain_thb|floatformat:2 }}</span>
+                        <span class="value-loss">{{ sale.capital_gain_thb|floatformat:2 }}</span>
                     {% endif %}
                 </td>
                 <td>
@@ -77,7 +77,7 @@
                 </td>
                 <td>
                     {% if sale.evidence %}
-                        <a href="{% url 'sale_evidence' sale.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                        <a href="{% url 'sale_evidence' sale.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-receipt me-1"></i>View</a>
                     {% else %}
                         &mdash;
                     {% endif %}
@@ -94,7 +94,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="sellModalLabel">Record a Sell</h5>
+                <h5 class="modal-title" id="sellModalLabel"><i class="bi bi-graph-up-arrow me-1"></i>Record a Sell</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">

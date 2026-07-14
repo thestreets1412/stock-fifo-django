@@ -1,0 +1,30 @@
+/* ==========================================================================
+   Typography tokens
+   The source app declares only `font-family: sans-serif` (portfolio/static/
+   portfolio/style.css) — no webfont is loaded anywhere in the codebase. This
+   is a genuine brand decision to ride the OS system font, not a missing
+   asset, so no Google Fonts substitution is offered here. See README →
+   Content Fundamentals / Visual Foundations for rationale.
+   ========================================================================== */
+
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* Bootstrap 5 default type scale, as rendered by the app's h1/table/small usage */
+  --text-2xl: 2.5rem;   /* h1 */
+  --text-xl: 1.75rem;   /* h2 */
+  --text-lg: 1.375rem;  /* h3 / card-title */
+  --text-md: 1rem;      /* body */
+  --text-sm: 0.875rem;  /* small, .small, form-text */
+  --text-xs: 0.765625rem;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+
+  --weight-normal: 400;
+  --weight-semibold: 600; /* .navbar-brand */
+  --weight-bold: 700;     /* headings */
+}

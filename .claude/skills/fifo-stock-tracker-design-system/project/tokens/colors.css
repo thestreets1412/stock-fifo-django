@@ -1,0 +1,67 @@
+/* ==========================================================================
+   Color tokens — FIFO Stock Tracker Design System
+   Base values lifted from Bootstrap 5.3 defaults (the app's only styling
+   dependency) plus the two report-only accents defined in portfolio/reports.py
+   (GAIN_COLOR, LOSS_COLOR, HEADER_BG). No custom brand palette exists in the
+   source app — these ARE the palette.
+   ========================================================================== */
+
+:root {
+  /* ---- Base: grayscale (Bootstrap gray scale, used verbatim by base.html / tables) ---- */
+  --gray-100: #f8f9fa;
+  --gray-200: #e9ecef;
+  --gray-300: #dee2e6;
+  --gray-400: #ced4da;
+  --gray-500: #adb5bd;
+  --gray-600: #6c757d;
+  --gray-700: #495057;
+  --gray-800: #343a40;
+  --gray-900: #212529;
+  --white: #ffffff;
+  --black: #000000;
+
+  /* ---- Base: brand blue (Bootstrap primary, used for navbar-brand text + primary buttons) ---- */
+  --blue-500: #0d6efd;
+  --blue-600: #0b5ed7;
+  --blue-700: #0a58ca;
+
+  /* ---- Base: semantic accents (from reports.py PDF export — the app's one
+     custom color decision, used for capital-gain/loss and the report header) ---- */
+  --green-700: #1e7e34;
+  --red-700: #c0392b;
+  --slate-800: #2c3e50;
+
+  /* ---- Base: Bootstrap contextual colors (alerts / message tags) ---- */
+  --info-500: #0dcaf0;
+  --warning-500: #ffc107;
+  --danger-500: #dc3545;
+  --success-500: #198754;
+  --secondary-500: #6c757d;
+
+  /* ---- Semantic aliases ---- */
+  --surface-page: var(--white);
+  --surface-navbar: var(--gray-900);
+  --surface-card: var(--white);
+  --surface-muted: var(--gray-100);
+  --surface-stripe: rgba(0, 0, 0, 0.05);
+  --surface-hover: rgba(0, 0, 0, 0.075);
+
+  --border-default: var(--gray-300);
+  --border-strong: var(--gray-400);
+
+  --text-body: var(--gray-900);
+  --text-muted: var(--gray-600);
+  --text-on-dark: var(--white);
+  --text-on-dark-muted: rgba(255, 255, 255, 0.55);
+
+  --text-link: var(--blue-500);
+  --text-link-hover: var(--blue-700);
+
+  --action-primary: var(--blue-500);
+  --action-primary-hover: var(--blue-600);
+  --action-primary-active: var(--blue-700);
+
+  --gain: var(--green-700);
+  --loss: var(--red-700);
+  --report-header: var(--slate-800);
+}

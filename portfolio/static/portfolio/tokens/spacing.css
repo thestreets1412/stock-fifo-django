@@ -1,0 +1,17 @@
+/* ==========================================================================
+   Spacing & radius tokens
+   Values match Bootstrap 5's default spacer scale and component radii,
+   which the app uses unmodified via utility classes (mb-3, gap-2, py-3, ...).
+   Kept here for the handful of places this app's own CSS (not a Bootstrap
+   utility class) needs to reference the same scale.
+   ========================================================================== */
+
+:root {
+  --space-1: 0.25rem;  /* 4px  */
+  --space-2: 0.5rem;   /* 8px  */
+  --space-3: 1rem;     /* 16px */
+  --space-4: 1.5rem;   /* 24px */
+
+  --radius-md: 0.375rem;  /* buttons, inputs, dropdowns */
+  --radius-lg: 0.5rem;    /* cards, modals */
+}

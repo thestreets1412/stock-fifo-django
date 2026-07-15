@@ -1,4 +1,8 @@
-from decimal import Decimal
+import json
+from decimal import Decimal, InvalidOperation
+from urllib.error import URLError, HTTPError
+from urllib.request import Request, urlopen
+
 from django.db import transaction
 from django.db.models import Q
 
@@ -8,6 +12,26 @@ from .models import StockLot, Sale, SaleAllocation, Symbol
 class InsufficientLotsError(Exception):
     """Raised when there isn't enough remaining quantity across all lots to cover a sale."""
     pass
+
+
+class FxRateFetchError(Exception):
+    """Raised when the USD→THB rate can't be auto-fetched for a given date."""
+    pass
+
+
+def fetch_usd_thb_rate(rate_date):
+    """
+    Looks up the USD→THB rate for rate_date via the free, open-source,
+    no-key-required Frankfurter API (ECB + central bank data).
+    """
+    url = f'https://api.frankfurter.app/{rate_date.isoformat()}?from=USD&to=THB'
+    request = Request(url, headers={'User-Agent': 'stock-fifo-web-app/1.0'})
+    try:
+        with urlopen(request, timeout=5) as response:
+            payload = json.load(response)
+        return Decimal(str(payload['rates']['THB']))
+    except (URLError, HTTPError, KeyError, ValueError, InvalidOperation) as exc:
+        raise FxRateFetchError(f'Could not fetch USD/THB rate for {rate_date}: {exc}') from exc
 
 
 def get_user_lots(owner, symbol_id=None):

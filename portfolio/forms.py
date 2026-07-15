@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from .models import StockLot, Symbol
+from .services import fetch_usd_thb_rate, FxRateFetchError
 
 
 class BootstrapAuthenticationForm(AuthenticationForm):
@@ -20,6 +21,23 @@ class StockLotForm(forms.ModelForm):
             'fx_rate_usd_thb': forms.NumberInput(attrs={'class': 'form-control'}),
             'evidence': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['fx_rate_usd_thb'].required = False
+        self.fields['fx_rate_usd_thb'].help_text = 'Leave blank to auto-fetch the USD/THB rate for the buy date.'
+
+    def clean_fx_rate_usd_thb(self):
+        rate = self.cleaned_data.get('fx_rate_usd_thb')
+        if rate:
+            return rate
+        buy_date = self.cleaned_data.get('buy_date')
+        if not buy_date:
+            raise forms.ValidationError('Enter a buy date first, or fill in FX rate manually.')
+        try:
+            return fetch_usd_thb_rate(buy_date)
+        except FxRateFetchError as exc:
+            raise forms.ValidationError(str(exc))
 
 
 class SellForm(forms.Form):
@@ -49,8 +67,22 @@ class SellForm(forms.Form):
                                  widget=forms.NumberInput(attrs={'class': 'form-control'}))
     fx_rate_usd_thb = forms.DecimalField(max_digits=10,
                                          decimal_places=4, min_value=0,
+                                         required=False,
+                                         help_text='Leave blank to auto-fetch the USD/THB rate for the sell date.',
                                          widget=forms.NumberInput(attrs={'class': 'form-control'}))
     evidence = forms.ImageField(
         required=False,
         widget=forms.ClearableFileInput(attrs={'class': 'form-control'}),
     )
+
+    def clean_fx_rate_usd_thb(self):
+        rate = self.cleaned_data.get('fx_rate_usd_thb')
+        if rate:
+            return rate
+        sell_date = self.cleaned_data.get('sell_date')
+        if not sell_date:
+            raise forms.ValidationError('Enter a sell date first, or fill in FX rate manually.')
+        try:
+            return fetch_usd_thb_rate(sell_date)
+        except FxRateFetchError as exc:
+            raise forms.ValidationError(str(exc))

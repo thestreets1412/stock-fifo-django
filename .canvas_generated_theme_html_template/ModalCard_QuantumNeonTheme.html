@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="en"><head><script>window["__codeletBootstrap__"]=JSON.parse('{"A":"A","B":"20260715-05-d05fd84"}');</script><script src="/_sdk/f432b76fb310b513.telemetry_sdk.js" integrity="sha512-9FJQ55EKmmqhyyik8BhrMVfm0+iYYfb8uOlRsjtkxJMEI97qOVEI4PnHohDjQAtvAep0IOEpdQ64eki0sz62ug=="></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Neon Modal Card</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+  <script src="/_sdk/0e8f359d3c23f6d5.editing_sdk.js" integrity="sha512-CBLuYm/olmgyMedTtPRFeqCRZcSWUh6/39ewyXAbnr1dsVHBACzZ59KGJZXvuWNHOHixfWegfuMN9JzmLEDIoA=="></script>
+  <style>
+    :root {
+      --ink: #0a0e1a;
+      --panel: rgba(16, 24, 43, 0.82);
+      --cyan: #00f0ff;
+      --magenta: #ff2e93;
+      --white: #e8ecf4;
+      --slate: #8a94a6;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+    }
+
+    body {
+      color: var(--white);
+      font-family: "Space Mono", monospace;
+      overflow-x: hidden;
+    }
+
+    button, input, select { font: inherit; }
+
+    .app-shell {
+      position: relative;
+      width: 100%;
+      min-height: calc(100 * min(var(--vh, 1vh), 1vh));
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      padding: clamp(1rem, 3vw, 2.5rem);
+      isolation: isolate;
+    }
+
+    .tech-grid {
+      position: absolute;
+      inset: 0;
+      z-index: -4;
+      opacity: .22;
+      background-image:
+        linear-gradient(rgba(0, 240, 255, .12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, .12) 1px, transparent 1px);
+      background-size: 54px 54px;
+      mask-image: linear-gradient(to bottom, black, transparent 92%);
+    }
+
+    .orb {
+      position: absolute;
+      z-index: -3;
+      width: 28rem;
+      height: 28rem;
+      border-radius: 999px;
+      filter: blur(105px);
+      opacity: .16;
+      pointer-events: none;
+    }
+
+    .orb-cyan { background: var(--cyan); top: -12rem; right: -8rem; }
+    .orb-magenta { background: var(--magenta); bottom: -15rem; left: -8rem; }
+
+    .dashboard-ghost {
+      position: absolute;
+      inset: clamp(1rem, 3vw, 3rem);
+      z-index: -2;
+      display: grid;
+      grid-template-columns: 1.3fr .7fr;
+      gap: 1.5rem;
+      opacity: .28;
+      pointer-events: none;
+    }
+
+    .ghost-panel {
+      border: 1px solid rgba(138, 148, 166, .13);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, .018);
+      overflow: hidden;
+    }
+
+    .ghost-bars {
+      display: flex;
+      align-items: end;
+      gap: 4%;
+      height: 100%;
+      padding: 12%;
+    }
+
+    .ghost-bars span {
+      flex: 1;
+      border-radius: 4px 4px 0 0;
+      background: linear-gradient(to top, rgba(0, 240, 255, .26), rgba(0, 240, 255, .04));
+    }
+
+    .ghost-lines { padding: 12%; }
+    .ghost-lines span {
+      display: block;
+      height: 10px;
+      margin-bottom: 18px;
+      border-radius: 999px;
+      background: rgba(138, 148, 166, .16);
+    }
+
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: rgba(10, 14, 26, .85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .modal-frame {
+      width: min(100%, 620px);
+      max-height: calc(92 * min(var(--vh, 1vh), 1vh));
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 240, 255, .4) transparent;
+      transition: opacity .3s ease, transform .3s ease;
+    }
+
+    .modal-frame::-webkit-scrollbar { width: 6px; }
+    .modal-frame::-webkit-scrollbar-thumb {
+      background: rgba(0, 240, 255, .35);
+      border-radius: 99px;
+    }
+
+    .modal-frame.is-closing {
+      opacity: 0;
+      transform: translateY(18px) scale(.97);
+      pointer-events: none;
+    }
+
+    .modal-content {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(0, 240, 255, .2);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, .04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0, 240, 255, .15), inset 0 1px 0 rgba(255,255,255,.05);
+      animation: modalEnter .55s cubic-bezier(.2, .8, .2, 1) both;
+    }
+
+    .modal-content::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 12%;
+      right: 12%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      box-shadow: 0 0 16px var(--cyan);
+      opacity: .8;
+    }
+
+    .corner-mark {
+      position: absolute;
+      width: 23px;
+      height: 23px;
+      pointer-events: none;
+    }
+
+    .corner-mark.tl {
+      top: 8px; left: 8px;
+      border-top: 1px solid var(--cyan);
+      border-left: 1px solid var(--cyan);
+    }
+
+    .corner-mark.br {
+      right: 8px; bottom: 8px;
+      border-right: 1px solid var(--magenta);
+      border-bottom: 1px solid var(--magenta);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.3rem 1.45rem 1.1rem;
+      border-bottom: 1px solid rgba(138, 148, 166, .14);
+    }
+
+    .title-wrap {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: .78rem;
+    }
+
+    .cash-icon {
+      display: grid;
+      flex: 0 0 auto;
+      width: 2.3rem;
+      height: 2.3rem;
+      place-items: center;
+      border: 1px solid rgba(0, 240, 255, .28);
+      border-radius: 10px;
+      color: var(--cyan);
+      background: rgba(0, 240, 255, .07);
+      box-shadow: 0 0 18px rgba(0, 240, 255, .12);
+    }
+
+    .cash-icon svg { width: 1.15rem; height: 1.15rem; }
+
+    .modal-title {
+      margin: 0;
+      font-family: "Chakra Petch", sans-serif;
+      line-height: 1.1;
+      letter-spacing: .055em;
+    }
+
+    .btn-close {
+      position: relative;
+      display: grid;
+      flex: 0 0 auto;
+      width: 2.35rem;
+      height: 2.35rem;
+      padding: 0;
+      place-items: center;
+      border: 1px solid rgba(138, 148, 166, .25);
+      border-radius: 10px;
+      color: var(--slate);
+      background: rgba(255, 255, 255, .04);
+      cursor: pointer;
+      transition: border-color .25s ease, color .25s ease, box-shadow .25s ease, transform .35s ease;
+    }
+
+    .btn-close::before,
+    .btn-close::after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 1.5px;
+      border-radius: 99px;
+      background: currentColor;
+    }
+
+    .btn-close::before { transform: rotate(45deg); }
+    .btn-close::after { transform: rotate(-45deg); }
+
+    .btn-close:hover {
+      color: var(--magenta);
+      border-color: var(--magenta);
+      box-shadow: 0 0 16px rgba(255, 46, 147, .3);
+      transform: rotate(90deg);
+    }
+
+    .modal-body { padding: 1.35rem 1.45rem 1.5rem; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .mb-3 { margin-bottom: 1rem; }
+    .form-grid .mb-3 { margin-bottom: 0; }
+    .span-2 { grid-column: span 2; }
+
+    .form-label {
+      display: inline-block;
+      margin-bottom: .48rem;
+      color: var(--slate);
+      font-family: "Chakra Petch", sans-serif;
+      font-size: .78rem;
+      font-weight: 600;
+      letter-spacing: .075em;
+      text-transform: uppercase;
+    }
+
+    .required-dot {
+      color: var(--cyan);
+      text-shadow: 0 0 8px rgba(0, 240, 255, .75);
+    }
+
+    .input-shell { position: relative; }
+
+    .input-icon {
+      position: absolute;
+      top: 50%;
+      left: .9rem;
+      width: 1rem;
+      height: 1rem;
+      color: rgba(138, 148, 166, .7);
+      transform: translateY(-50%);
+      pointer-events: none;
+      transition: color .2s ease;
+    }
+
+    .input-shell:focus-within .input-icon { color: var(--cyan); }
+
+    .form-control,
+    .form-select {
+      width: 100%;
+      min-height: 3rem;
+      padding: .76rem .9rem .76rem 2.65rem;
+      border: 1px solid rgba(138, 148, 166, .3);
+      border-radius: 10px;
+      outline: none;
+      color: var(--white);
+      background: rgba(10, 14, 26, .6);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: .9rem;
+      caret-color: var(--cyan);
+      transition: border-color .22s ease, box-shadow .22s ease, background .22s ease;
+    }
+
+    .form-select {
+      appearance: none;
+      padding-right: 2.5rem;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #00f0ff 50%),
+        linear-gradient(135deg, #00f0ff 50%, transparent 50%);
+      background-position: calc(100% - 18px) 51%, calc(100% - 13px) 51%;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+    }
+
+    .form-control:hover,
+    .form-select:hover { border-color: rgba(138, 148, 166, .55); }
+
+    .form-control:focus,
+    .form-select:focus {
+      border-color: var(--cyan);
+      background-color: rgba(10, 14, 26, .78);
+      box-shadow: 0 0 0 1px rgba(0, 240, 255, .1), 0 0 10px rgba(0, 240, 255, .25);
+    }
+
+    .form-control:user-invalid,
+    .form-select:user-invalid,
+    .was-validated .form-control:invalid,
+    .was-validated .form-select:invalid {
+      border-color: var(--magenta);
+      box-shadow: 0 0 10px rgba(255, 46, 147, .18);
+    }
+
+    select option {
+      color: var(--white);
+      background: #10182b;
+    }
+
+    input[type="date"] { color-scheme: dark; }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      filter: invert(86%) sepia(97%) saturate(2934%) hue-rotate(126deg) brightness(106%);
+      opacity: .9;
+    }
+
+    input[type="number"] { font-variant-numeric: tabular-nums; }
+    input[type="number"]::-webkit-inner-spin-button { opacity: .55; }
+
+    input[type="file"] {
+      padding: .42rem .48rem;
+      color: var(--slate);
+      overflow: hidden;
+    }
+
+    input[type="file"]::file-selector-button {
+      margin-right: .8rem;
+      padding: .52rem .72rem;
+      border: 1px solid rgba(0, 240, 255, .25);
+      border-radius: 7px;
+      color: var(--white);
+      background: rgba(255, 255, 255, .06);
+      font-family: "Chakra Petch", sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .2s ease, color .2s ease, box-shadow .2s ease;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      color: var(--magenta);
+      border-color: var(--magenta);
+      box-shadow: 0 0 10px rgba(255, 46, 147, .22);
+    }
+
+    .form-text {
+      margin-top: .45rem;
+      color: var(--slate);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: .7rem;
+      line-height: 1.55;
+    }
+
+    .file-status {
+      min-height: 1.15rem;
+      margin-top: .4rem;
+      color: var(--cyan);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: .69rem;
+      overflow-wrap: anywhere;
+    }
+
+    .action-row {
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+      margin-top: 1.25rem;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      min-height: 3rem;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      gap: .65rem;
+      padding: .75rem 1.2rem;
+      border: 1px solid var(--cyan);
+      border-radius: 10px;
+      color: var(--ink);
+      background: var(--cyan);
+      font-family: "Chakra Petch", sans-serif;
+      font-size: .88rem;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 0 0 rgba(0, 240, 255, 0);
+      transition: transform .22s ease, box-shadow .22s ease, filter .22s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px) scale(1.012);
+      box-shadow: 0 0 15px rgba(0, 240, 255, .6);
+      filter: brightness(1.07);
+    }
+
+    .btn-primary:disabled {
+      cursor: wait;
+      opacity: .72;
+      transform: none;
+    }
+
+    .btn-primary svg { width: 1.05rem; height: 1.05rem; }
+
+    .button-label-loading { display: none; }
+    .is-loading .button-label-default { display: none; }
+    .is-loading .button-label-loading { display: inline; }
+
+    .spinner {
+      display: none;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(10,14,26,.3);
+      border-top-color: var(--ink);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    .is-loading .spinner { display: block; }
+
+    .status {
+      display: none;
+      align-items: flex-start;
+      gap: .6rem;
+      margin-top: 1rem;
+      padding: .75rem .85rem;
+      border-radius: 9px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: .75rem;
+      line-height: 1.5;
+    }
+
+    .status.is-visible { display: flex; }
+    .status.success {
+      border: 1px solid rgba(0, 240, 255, .28);
+      color: #bdfaff;
+      background: rgba(0, 240, 255, .07);
+    }
+
+    .status.error {
+      border: 1px solid rgba(255, 46, 147, .3);
+      color: #ffc1df;
+      background: rgba(255, 46, 147, .08);
+    }
+
+    .status svg { width: 1rem; height: 1rem; flex: 0 0 auto; margin-top: .08rem; }
+
+    .reopen-button {
+      display: none;
+      position: relative;
+      z-index: 2;
+      align-items: center;
+      gap: .6rem;
+      padding: .8rem 1rem;
+      border: 1px solid rgba(0, 240, 255, .5);
+      border-radius: 10px;
+      color: var(--cyan);
+      background: rgba(10, 14, 26, .78);
+      box-shadow: 0 0 18px rgba(0, 240, 255, .14);
+      cursor: pointer;
+      font-family: "Chakra Petch", sans-serif;
+      font-weight: 600;
+      letter-spacing: .06em;
+    }
+
+    .reopen-button.is-visible { display: inline-flex; }
+
+    :where(button, input, select):focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 3px;
+    }
+
+    @keyframes modalEnter {
+      from { opacity: 0; transform: translateY(24px) scale(.975); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 640px) {
+      .app-shell { padding: .75rem; align-items: start; }
+      .modal-frame { margin-top: .75rem; max-height: calc(96 * min(var(--vh, 1vh), 1vh)); }
+      .modal-header { padding: 1.1rem 1rem .95rem; }
+      .modal-body { padding: 1.05rem 1rem 1.15rem; }
+      .form-grid { grid-template-columns: 1fr; }
+      .span-2 { grid-column: auto; }
+      .dashboard-ghost { grid-template-columns: 1fr; }
+      .dashboard-ghost .ghost-panel:last-child { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+  <script src="/_sdk/e3937a0574eb2d69.data_sdk.js" type="text/javascript" integrity="sha512-xbp/ACqEQy1aDxYMtXTrR3y5MUbzxuggRR/9sD48Gl4VhLMMCiAHsxMaFV6DTdeBpR6ymF+t2zhPKYkWM3+Jfw=="></script>
+  <script src="/_sdk/9432170dbd2ae0df.resizing_sdk.js" type="text/javascript" integrity="sha512-FeT+58sb1f9ejWPWFjCbJvTT+SDwGV+ngrHUnlO7TWEOoqwOLj6p256kO3vOL7DIWl1cIgrobiof8v2bOigwPg=="></script>
+ </head>
+ <body data-template-id="__page-root" style="background: radial-gradient(circle at right top, rgb(18, 38, 59), rgb(10, 14, 26) 55%, rgb(7, 10, 18));">
+  <div class="app-shell">
+   <div class="tech-grid" aria-hidden="true"></div>
+   <div class="orb orb-cyan" aria-hidden="true"></div>
+   <div class="orb orb-magenta" aria-hidden="true"></div>
+   <div class="dashboard-ghost" aria-hidden="true">
+    <div class="ghost-panel">
+     <div class="ghost-bars"><span style="height:32%"></span><span style="height:58%"></span> <span style="height:43%"></span><span style="height:74%"></span> <span style="height:65%"></span><span style="height:88%"></span>
+     </div>
+    </div>
+    <div class="ghost-panel ghost-lines"><span style="width:45%"></span><span style="width:78%"></span> <span style="width:62%"></span><span style="width:88%"></span> <span style="width:53%"></span>
+    </div>
+   </div>
+   <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true"></div>
+   <main id="lotModal" class="modal-frame" role="dialog" aria-modal="true" aria-labelledby="lotModalLabel">
+    <div data-template-id="modal-surface" class="modal-content canva-card" style="background: linear-gradient(145deg, rgba(27, 38, 62, 0.94), rgba(10, 14, 26, 0.96));"><span class="corner-mark tl" aria-hidden="true"></span> <span class="corner-mark br" aria-hidden="true"></span>
+     <div class="modal-header">
+      <div class="title-wrap"><span class="cash-icon" aria-hidden="true"> <i data-lucide="circle-dollar-sign"></i> </span>
+       <h1 data-template-id="modal-title" class="modal-title canva-text" id="lotModalLabel" style="color: rgb(232, 236, 244); font-weight: 600; font-style: normal; font-size: 24px; letter-spacing: 0.055rem;">Record a Buy</h1>
+      </div><button data-template-id="close-button" type="button" class="btn-close canva-button" data-bs-dismiss="modal" aria-label="Close" style="background: rgba(255, 255, 255, 0.04); color: rgb(138, 148, 166);"></button>
+     </div>
+     <div class="modal-body">
+      <form method="post" enctype="multipart/form-data" action="/buy/" id="lotForm" class="ajax-modal-form" novalidate=""><input type="hidden" name="csrfmiddlewaretoken" value="3nyTa4BcAymRthXhxFS9MZHXbgw6P6c1vrC10TI4fnzO2Bpnbzr5J9UlZBZjH6j6">
+       <div class="form-grid"><!-- Symbol Selection -->
+        <div class="mb-3 span-2"><label data-template-id="symbol-label" for="id_symbol" class="form-label canva-text" style="color: rgb(138, 148, 166); font-weight: 600; font-style: normal; font-size: 15px;">Symbol</label> <span class="required-dot" aria-hidden="true">*</span>
+         <div class="input-shell"><i data-lucide="bar-chart-3" class="input-icon" aria-hidden="true"></i> <select name="symbol" class="form-select" required="" id="id_symbol"> <option value="" selected="">---------</option> <option value="3">GOOG</option> <option value="1">NVDA</option> <option value="4">SGOV</option> <option value="2">TSLA</option> </select>
+         </div>
+        </div><!-- Buy Date -->
+        <div class="mb-3"><label data-template-id="buy-date-label" for="id_buy_date" class="form-label canva-text" style="color: rgb(138, 148, 166); font-weight: 600; font-style: normal; font-size: 15px;">Buy date</label> <span class="required-dot" aria-hidden="true">*</span>
+         <div class="input-shell"><i data-lucide="calendar-days" class="input-icon" aria-hidden="true"></i> <input type="date" name="buy_date" class="form-control" required="" id="id_buy_date">
+         </div>
+        </div><!-- Price USD -->
+        <div class="mb-3"><label data-template-id="price-label" for="id_price_usd" class="form-label canva-text" style="color: rgb(138, 148, 166); font-weight: 600; font-style: normal; font-size: 15px;">Price usd</label> <span class="required-dot" aria-hidden="true">*</span>
+         <div class="input-shell"><i data-lucide="badge-dollar-sign" class="input-icon" aria-hidden="true"></i> <input type="number" name="price_usd" class="form-control" step="0.000001" required="" id="id_price_usd">
+         </div>
+        </div><!-- Quantity -->
+        <div class="mb-3"><label data-template-id="quantity-label" for="id_qty" class="form-label canva-text" style="color: rgb(138, 148, 166); font-weight: 600; font-style: normal; font-size: 15px;">Qty</label> <span class="required-dot" aria-hidden="true">*</span>
+         <div class="input-shell"><i data-lucide="layers-3" class="input-icon" aria-hidden="true"></i> <input type="number" name="qty" class="form-control" step="1e-8" required="" id="id_qty">
+         </div>
+        </div><!-- FX Rate (USD to THB) -->
+        <div class="mb-3"><label data-template-id="fx-label" for="id_fx_rate_usd_thb" class="form-label canva-text" style="color: rgb(138, 148, 166); font-weight: 600; font-style: normal; font-size: 15px;">Fx rate usd thb</label>
+         <div class="input-shell"><i data-lucide="arrow-left-right" class="input-icon" aria-hidden="true"></i> <input type="number" name="fx_rate_usd_thb" class="form-control" step="0.0001" aria-describedby="id_fx_rate_usd_thb_helptext" id="id_fx_rate_usd_thb">
+         </div>
+         <div data-template-id="fx-help-text" id="id_fx_rate_usd_thb_helptext" class="form-text canva-text" style="color: rgb(138, 148, 166); font-weight: 400; font-style: normal; font-size: 11px;">Leave blank to auto-fetch the USD/THB rate for the buy date.</div>
+        </div><!-- Upload Evidence -->
+        <div class="mb-3 span-2"><label data-template-id="evidence-label" for="id_evidence" class="form-label canva-text" style="color: rgb(138, 148, 166); font-weight: 600; font-style: normal; font-size: 15px;">Evidence</label> <input type="file" name="evidence" class="form-control" accept="image/*" id="id_evidence">
+         <div id="fileStatus" class="file-status" aria-live="polite"></div>
+        </div>
+       </div><!-- Action Button -->
+       <div class="action-row"><button data-template-id="save-button" type="submit" class="btn btn-primary canva-button" style="background: rgb(0, 240, 255); color: rgb(10, 14, 26);"> <span class="spinner" aria-hidden="true"></span> <i data-lucide="database-zap" aria-hidden="true"></i> <span data-template-id="save-button-label" class="button-label-default canva-text" style="color: rgb(10, 14, 26); font-weight: 700; font-style: normal; font-size: 14px; letter-spacing: 0.14rem;">Save</span> <span data-template-id="saving-button-label" class="button-label-loading canva-text" style="color: rgb(10, 14, 26); font-weight: 700; font-style: normal; font-size: 14px; letter-spacing: 0.1rem;">Processing</span> </button>
+       </div>
+       <div id="successStatus" class="status success" role="status" aria-live="polite"><i data-lucide="check-circle-2" aria-hidden="true"></i> <span data-template-id="success-message" class="canva-text" style="color: rgb(189, 250, 255); font-weight: 400; font-style: normal; font-size: 12px;">Lot validated. Connect this form to the Django endpoint to commit the purchase.</span>
+       </div>
+       <div id="errorStatus" class="status error" role="alert"><i data-lucide="triangle-alert" aria-hidden="true"></i> <span data-template-id="error-message" class="canva-text" style="color: rgb(255, 193, 223); font-weight: 400; font-style: normal; font-size: 12px;">Complete all required fields before saving this lot.</span>
+       </div>
+      </form>
+     </div>
+    </div>
+   </main><button data-template-id="reopen-button" id="reopenButton" type="button" class="reopen-button canva-button" style="background: rgb(16, 24, 43); color: rgb(0, 240, 255); font-weight: 600; font-style: normal; font-size: 15px;">Reopen modal</button>
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+
+      const modal = document.getElementById("lotModal");
+      const backdrop = document.getElementById("modalBackdrop");
+      const closeButton = document.querySelector(".btn-close");
+      const reopenButton = document.getElementById("reopenButton");
+      const form = document.getElementById("lotForm");
+      const submitButton = form.querySelector('[type="submit"]');
+      const evidenceInput = document.getElementById("id_evidence");
+      const fileStatus = document.getElementById("fileStatus");
+      const successStatus = document.getElementById("successStatus");
+      const errorStatus = document.getElementById("errorStatus");
+      let lastFocusedElement = null;
+      let submitting = false;
+
+      const focusableSelector = [
+        "button:not([disabled])",
+        "select:not([disabled])",
+        "input:not([type='hidden']):not([disabled])",
+        "[tabindex]:not([tabindex='-1'])"
+      ].join(",");
+
+      function hideStatuses() {
+        successStatus.classList.remove("is-visible");
+        errorStatus.classList.remove("is-visible");
+      }
+
+      function closeModal() {
+        if (modal.hidden || submitting) return;
+        lastFocusedElement = document.activeElement;
+        modal.classList.add("is-closing");
+        backdrop.style.opacity = "0";
+        setTimeout(() => {
+          modal.hidden = true;
+          modal.classList.remove("is-closing");
+          backdrop.hidden = true;
+          reopenButton.classList.add("is-visible");
+          reopenButton.focus();
+        }, 300);
+      }
+
+      function openModal() {
+        modal.hidden = false;
+        backdrop.hidden = false;
+        backdrop.style.opacity = "1";
+        reopenButton.classList.remove("is-visible");
+        hideStatuses();
+        requestAnimationFrame(() => document.getElementById("id_symbol").focus());
+      }
+
+      closeButton.addEventListener("click", closeModal);
+      reopenButton.addEventListener("click", openModal);
+
+      backdrop.addEventListener("click", closeModal);
+
+      evidenceInput.addEventListener("change", () => {
+        fileStatus.textContent = evidenceInput.files.length
+          ? evidenceInput.files[0].name
+          : "";
+      });
+
+      form.addEventListener("input", () => {
+        form.classList.remove("was-validated");
+        errorStatus.classList.remove("is-visible");
+      });
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        hideStatuses();
+        form.classList.add("was-validated");
+
+        if (!form.checkValidity()) {
+          errorStatus.classList.add("is-visible");
+          const firstInvalid = form.querySelector(":invalid");
+          if (firstInvalid) firstInvalid.focus();
+          return;
+        }
+
+        submitting = true;
+        submitButton.disabled = true;
+        submitButton.classList.add("is-loading");
+        form.querySelectorAll("input, select").forEach(control => {
+          if (control.type !== "hidden") control.disabled = true;
+        });
+
+        setTimeout(() => {
+          submitting = false;
+          submitButton.disabled = false;
+          submitButton.classList.remove("is-loading");
+          form.querySelectorAll("input, select").forEach(control => {
+            control.disabled = false;
+          });
+          successStatus.classList.add("is-visible");
+          form.classList.remove("was-validated");
+          lucide.createIcons();
+        }, 850);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !modal.hidden) {
+          closeModal();
+          return;
+        }
+
+        if (event.key !== "Tab" || modal.hidden) return;
+
+        const focusable = [...modal.querySelectorAll(focusableSelector)]
+          .filter(element => element.offsetParent !== null);
+        if (!focusable.length) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      });
+    });
+  </script>
+ 
+</body></html>

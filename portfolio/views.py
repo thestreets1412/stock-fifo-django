@@ -71,7 +71,7 @@ class StockLotCreateView(LoginRequiredMixin, CreateView):
 class SellView(LoginRequiredMixin, FormView):
     form_class = SellForm
     template_name = 'portfolio/sell_form.html'
-    success_url = reverse_lazy('lot_list')
+    success_url = reverse_lazy('sale_list')
 
     def form_valid(self, form):
         try:

@@ -1,13 +1,16 @@
 /* ==========================================================================
-   Typography tokens
-   This app declares only `font-family: sans-serif` — no webfont is loaded
-   anywhere. That's a genuine "ride the OS system font" decision, not a
-   missing asset, so this token rides the same system-font stack.
+   Typography tokens — "Quantum Neon" theme
+   Google Fonts: IBM Plex Mono (labels, data, mono figures) + Space Grotesk
+   (display/body). Loaded in base.html.
    ========================================================================== */
 
 :root {
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo,
+    Consolas, "Liberation Mono", monospace;
+
+  --text-sm: 0.875rem;
 
   --weight-normal: 400;
   --weight-semibold: 600; /* .navbar-brand */

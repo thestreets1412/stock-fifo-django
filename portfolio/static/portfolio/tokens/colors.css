@@ -1,51 +1,49 @@
 /* ==========================================================================
    Color tokens — FIFO Stock Tracker Design System
-   Base values are Bootstrap 5.3 defaults (the app's only styling dependency)
-   plus the two report-only accents defined in portfolio/reports.py
-   (GAIN_COLOR, LOSS_COLOR, HEADER_BG), now shared with the web UI so a
-   capital gain/loss reads the same color in the browser as in the PDF.
+   "Quantum Neon" theme: dark glassmorphism, cyan/magenta/lime glow accents.
+   Sourced from .canvas_generated_theme_html_template/HomePageStockAndSaleLists_
+   QuantumNeonTheme.html and ModalCard_QuantumNeonTheme.html.
    ========================================================================== */
 
 :root {
-  /* ---- Base: grayscale ---- */
-  --gray-100: #f8f9fa;
-  --gray-200: #e9ecef;
-  --gray-300: #dee2e6;
-  --gray-400: #ced4da;
-  --gray-500: #adb5bd;
-  --gray-600: #6c757d;
-  --gray-700: #495057;
-  --gray-800: #343a40;
-  --gray-900: #212529;
-  --white: #ffffff;
+  /* ---- Base: neutral scale (dark navy surface) ---- */
+  --gray-100: #1a2135;
+  --gray-200: #202840;
+  --gray-300: rgba(0, 240, 255, 0.15);
+  --gray-400: rgba(0, 240, 255, 0.17);
+  --gray-500: #8a94a6;
+  --gray-600: #00f0ff;
+  --gray-700: #8a94a6;
+  --gray-800: #10182b;
+  --gray-900: #0a0e1a;
+  --white: #e8ecf4;
   --black: #000000;
 
-  /* ---- Base: brand blue (navbar-brand text + primary buttons) ---- */
-  --blue-500: #0d6efd;
-  --blue-600: #0b5ed7;
-  --blue-700: #0a58ca;
+  /* ---- Base: brand cyan (navbar-brand text + primary buttons) ---- */
+  --blue-500: #00f0ff;
+  --blue-600: #33f4ff;
+  --blue-700: #00c2d1;
 
-  /* ---- Base: semantic accents (from reports.py — the app's one custom
-     color decision, used for capital-gain/loss and the report header) ---- */
-  --green-700: #1e7e34;
-  --red-700: #c0392b;
-  --slate-800: #2c3e50;
+  /* ---- Base: semantic accents (capital-gain/loss + report header) ---- */
+  --green-700: #39ff14;
+  --red-700: #ff3b30;
+  --slate-800: #ff2e93;
 
   /* ---- Semantic aliases ---- */
-  --surface-page: var(--white);
-  --surface-navbar: var(--gray-900);
-  --surface-card: var(--white);
-  --surface-muted: var(--gray-100);
-  --surface-stripe: rgba(0, 0, 0, 0.05);
-  --surface-hover: rgba(0, 0, 0, 0.075);
+  --surface-page: var(--gray-900);
+  --surface-navbar: rgba(10, 14, 26, 0.78);
+  --surface-card: rgba(255, 255, 255, 0.05);
+  --surface-muted: rgba(255, 255, 255, 0.045);
+  --surface-stripe: rgba(0, 240, 255, 0.035);
+  --surface-hover: rgba(0, 240, 255, 0.07);
 
-  --border-default: var(--gray-300);
-  --border-strong: var(--gray-400);
+  --border-default: rgba(0, 240, 255, 0.17);
+  --border-strong: rgba(0, 240, 255, 0.4);
 
-  --text-body: var(--gray-900);
-  --text-muted: var(--gray-600);
+  --text-body: var(--white);
+  --text-muted: #8a94a6;
   --text-on-dark: var(--white);
-  --text-on-dark-muted: rgba(255, 255, 255, 0.55);
+  --text-on-dark-muted: rgba(232, 236, 244, 0.55);
 
   --action-primary: var(--blue-500);
   --action-primary-hover: var(--blue-600);

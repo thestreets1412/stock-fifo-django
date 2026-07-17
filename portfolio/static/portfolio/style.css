@@ -2,24 +2,318 @@
 @import url("tokens/typography.css");
 @import url("tokens/spacing.css");
 
-.navbar-brand {
-    font-weight: var(--weight-semibold);
-}
-body {
-    font-family: var(--font-sans);
-    width: auto !important;
-    margin: 40px auto;
+/* ==========================================================================
+   Quantum Neon theme — dark glassmorphism override of Bootstrap 5 defaults.
+   Same markup/classes as before (navbar, cards, tables, modals, dropdowns,
+   forms, alerts) — only visual values change. Sourced from
+   .canvas_generated_theme_html_template/HomePageStockAndSaleLists_
+   QuantumNeonTheme.html and ModalCard_QuantumNeonTheme.html.
+   ========================================================================== */
+
+:root {
+  --space-navy: #0a0e1a;
+  --cyan: #00f0ff;
+  --magenta: #ff2e93;
+  --lime: #39ff14;
+  --loss-red: #ff3b30;
+  --text: #e8ecf4;
+  --muted: #8a94a6;
+  --line: rgba(0, 240, 255, 0.15);
+  --cyan-glow: 0 0 20px rgba(0, 240, 255, 0.35);
+  --magenta-glow: 0 0 18px rgba(255, 46, 147, 0.28);
 }
 
-/* GainLossBadge — green for gain, red for loss, tabular figures so a column
-   of THB amounts lines up. Mirrors reports.py's GAIN_COLOR / LOSS_COLOR. */
+body {
+  width: auto !important;
+  margin: 40px auto;
+  font-family: var(--font-sans);
+  color: var(--text);
+  background-color: var(--space-navy);
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0, 240, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.025) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.68) 70%, transparent 100%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 16% 18%, rgba(0, 240, 255, 0.12), transparent 26%),
+    radial-gradient(circle at 85% 34%, rgba(255, 46, 147, 0.09), transparent 24%),
+    radial-gradient(circle at 52% 84%, rgba(0, 240, 255, 0.055), transparent 27%);
+}
+
+a {
+  color: var(--cyan);
+}
+a:hover {
+  color: var(--cyan);
+}
+
+/* ---- Navbar ---- */
+.navbar.bg-dark {
+  background-color: rgba(10, 14, 26, 0.78) !important;
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.navbar-brand {
+  font-weight: var(--weight-semibold);
+  color: var(--text) !important;
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.45);
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: var(--muted) !important;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .nav-link.active {
+  color: var(--text) !important;
+}
+
+.navbar-dark .navbar-nav .nav-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: -2px;
+  height: 2px;
+  background: var(--cyan);
+  box-shadow: var(--cyan-glow);
+  transition: left 0.24s ease, right 0.24s ease;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover::after {
+  left: 0;
+  right: 0;
+}
+
+.navbar-text {
+  color: var(--muted) !important;
+}
+
+.navbar .btn-outline-light {
+  border-color: rgba(0, 240, 255, 0.4);
+  color: var(--text);
+}
+.navbar .btn-outline-light:hover {
+  background: rgba(0, 240, 255, 0.1);
+  border-color: var(--cyan);
+  color: var(--text);
+  box-shadow: var(--cyan-glow);
+}
+
+/* ---- Cards ---- */
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 0 0 1px rgba(0, 240, 255, 0.035) inset;
+}
+
+.card-title,
+.card-body {
+  color: var(--text);
+}
+
+.card-text.text-muted {
+  color: var(--muted) !important;
+}
+
+/* ---- Tables ---- */
+.table {
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.table > :not(caption) > * > * {
+  background-color: transparent;
+  color: var(--text);
+  border-bottom-color: var(--line);
+}
+
+.table thead th {
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: var(--text-sm);
+  border-bottom: 2px solid var(--line);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: rgba(0, 240, 255, 0.035);
+}
+
+.table-hover > tbody > tr:hover > * {
+  background-color: rgba(0, 240, 255, 0.07);
+}
+
+.text-muted {
+  color: var(--muted) !important;
+}
+
+/* ---- Buttons ---- */
+.btn-primary {
+  background-color: var(--cyan);
+  border-color: var(--cyan);
+  color: #031216;
+  font-weight: var(--weight-semibold);
+  box-shadow: 0 0 17px rgba(0, 240, 255, 0.25);
+}
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: #33f4ff !important;
+  border-color: #33f4ff !important;
+  color: #031216 !important;
+  box-shadow: var(--cyan-glow);
+}
+
+.btn-outline-secondary {
+  color: var(--cyan);
+  border-color: rgba(0, 240, 255, 0.32);
+  background: transparent;
+}
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-secondary:active {
+  color: var(--cyan) !important;
+  background-color: rgba(0, 240, 255, 0.07) !important;
+  border-color: var(--cyan) !important;
+  box-shadow: var(--cyan-glow);
+}
+
+.btn-close {
+  filter: invert(1) grayscale(100%) brightness(1.6);
+}
+
+/* ---- Forms ---- */
+.form-label {
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.form-control,
+.form-select {
+  background-color: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+.form-control:focus,
+.form-select:focus {
+  background-color: rgba(255, 255, 255, 0.045);
+  border-color: rgba(0, 240, 255, 0.55);
+  color: var(--text);
+  box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.07);
+}
+
+.form-control::placeholder {
+  color: #687386;
+}
+
+.form-select {
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--cyan) 50%),
+    linear-gradient(135deg, var(--cyan) 50%, transparent 50%);
+}
+
+.form-text {
+  color: var(--muted);
+}
+
+.col-form-label {
+  color: var(--muted);
+}
+
+.form-control[type="file"]::file-selector-button {
+  background-color: rgba(0, 240, 255, 0.1);
+  color: var(--cyan);
+  border: 1px solid rgba(0, 240, 255, 0.32);
+  border-radius: var(--radius-md);
+}
+
+/* ---- Alerts ---- */
+.alert-danger {
+  background-color: rgba(255, 46, 147, 0.08);
+  border-color: rgba(255, 46, 147, 0.32);
+  color: #ff8fc4;
+}
+
+.text-danger {
+  color: #ff8fc4 !important;
+}
+
+/* ---- Modals ---- */
+.modal-content {
+  background: rgba(14, 20, 35, 0.96);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  box-shadow: var(--shadow-modal);
+  color: var(--text);
+}
+
+.modal-header,
+.modal-footer {
+  border-color: var(--line);
+}
+
+/* ---- Dropdown (FIFO report export menu) ---- */
+.dropdown-menu {
+  background: rgba(14, 20, 35, 0.96);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-dropdown);
+}
+
+.dropdown-item {
+  color: var(--text);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: rgba(0, 240, 255, 0.08);
+  color: var(--cyan);
+}
+
+/* ---- GainLossBadge — green for gain, red for loss, tabular figures so a
+   column of THB amounts lines up. Mirrors reports.py's GAIN_COLOR / LOSS_COLOR. */
 .value-gain,
 .value-loss {
-    font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
 }
 .value-gain {
-    color: var(--gain);
+  color: var(--lime);
+  text-shadow: 0 0 8px rgba(57, 255, 20, 0.35);
 }
 .value-loss {
-    color: var(--loss);
+  color: var(--loss-red);
+}
+
+/* ---- Footer ---- */
+footer.border-top {
+  border-top: 1px solid var(--line) !important;
+}
+
+.text-body-secondary {
+  color: var(--muted) !important;
 }

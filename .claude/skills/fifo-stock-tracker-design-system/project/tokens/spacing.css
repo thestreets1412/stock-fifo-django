@@ -1,8 +1,8 @@
 /* ==========================================================================
-   Spacing, radius & elevation tokens
-   Values match Bootstrap 5's default spacer scale and component radii, which
-   the app uses unmodified (mb-3, mb-4, mb-5, gap-2, py-3, my-4, card/button/
-   input radius, modal radius).
+   Spacing, radius & elevation tokens — "Quantum Neon" theme
+   Spacer/radius scale unchanged (still Bootstrap's, since markup/utility
+   classes weren't touched); shadows switched from flat drop-shadows to
+   cyan/magenta glow, matching the canvas mockup's glass panels.
    ========================================================================== */
 
 :root {
@@ -18,8 +18,8 @@
   --radius-pill: 50rem;
 
   --shadow-none: none;
-  --shadow-modal: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-  --shadow-dropdown: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
+  --shadow-modal: 0 0 32px rgba(0, 240, 255, 0.13);
+  --shadow-dropdown: 0 0 18px rgba(0, 240, 255, 0.13);
 
   --border-width: 1px;
 }

@@ -6,7 +6,10 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.template.loader import render_to_string
 from .models import Symbol, StockLot, Sale
 from .forms import StockLotForm, SellForm
-from .services import record_sale, InsufficientLotsError, get_user_lots, get_user_sales, build_fifo_report
+from .services import (
+    record_sale, InsufficientLotsError, get_user_lots, get_user_sales,
+    build_fifo_report, build_dashboard_summary,
+)
 from . import reports
 
 
@@ -43,6 +46,7 @@ class LotListView(LoginRequiredMixin, ListView):
         context['symbols'] = Symbol.objects.all()
         context['selected_symbol_id'] = self.request.GET.get('symbol', '')
         context['form'] = StockLotForm()
+        context['dashboard'] = build_dashboard_summary(self.request.user)
         return context
 
 class StockLotCreateView(LoginRequiredMixin, CreateView):

@@ -20,6 +20,7 @@
       rel="stylesheet"
     />
     <link href="{% static 'portfolio/style.css' %}" rel="stylesheet" />
+    {% block extra_head %}{% endblock %}
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
@@ -37,9 +38,9 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarContent">
           <ul class="navbar-nav me-auto">
-            <li class="nav-item">
+            <!-- <li class="nav-item">
               <a class="nav-link" href="{% url 'lot_list' %}">Lots</a>
-            </li>
+            </li> -->
             <li class="nav-item">
               <a class="nav-link" href="{% url 'sale_list' %}">Sell History</a>
             </li>
@@ -93,5 +94,6 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'portfolio/modal-forms.js' %}"></script>
+    {% block extra_scripts %}{% endblock %}
   </body>
 </html>

@@ -1,7 +1,11 @@
 import json
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from urllib.error import URLError, HTTPError
 from urllib.request import Request, urlopen
+
+import yfinance
 
 from django.db import transaction
 from django.db.models import Q
@@ -16,6 +20,11 @@ class InsufficientLotsError(Exception):
 
 class FxRateFetchError(Exception):
     """Raised when the USD→THB rate can't be auto-fetched for a given date."""
+    pass
+
+
+class PriceFetchError(Exception):
+    """Raised when the current market price can't be fetched for a ticker."""
     pass
 
 
@@ -94,6 +103,120 @@ def build_fifo_report(owner, symbol_id=None):
             'realized_gain_thb': realized_gain_thb,
         })
     return sections
+
+
+PRICE_FETCH_TIMEOUT_SECONDS = 5
+
+
+def _fetch_last_price(ticker):
+    info = yfinance.Ticker(ticker).fast_info
+    price = info.get('last_price') if isinstance(info, dict) else info.last_price
+    if price is None:
+        raise ValueError(f'No last_price available for {ticker}')
+    return Decimal(str(price))
+
+
+def fetch_current_price(ticker):
+    """
+    Looks up the latest USD market price for a ticker via yfinance.
+    Bounded to PRICE_FETCH_TIMEOUT_SECONDS — yfinance has no built-in
+    request timeout for fast_info, and without one a slow/rate-limited
+    upstream can hang the whole dashboard request. Runs in a worker thread
+    so a timeout can be enforced without touching global socket state
+    (which would race across concurrently-served requests).
+    """
+    executor = ThreadPoolExecutor(max_workers=1)
+    try:
+        return executor.submit(_fetch_last_price, ticker).result(timeout=PRICE_FETCH_TIMEOUT_SECONDS)
+    except FutureTimeoutError as exc:
+        raise PriceFetchError(f'Timed out fetching current price for {ticker}') from exc
+    except (ValueError, InvalidOperation, KeyError, AttributeError, TypeError) as exc:
+        raise PriceFetchError(f'Could not fetch current price for {ticker}: {exc}') from exc
+    except Exception as exc:  # yfinance/network errors don't share a common base class
+        raise PriceFetchError(f'Could not fetch current price for {ticker}: {exc}') from exc
+    finally:
+        executor.shutdown(wait=False)
+
+
+def build_dashboard_summary(owner):
+    """
+    Builds the home-page portfolio dashboard: totals plus a per-symbol
+    breakdown of cost basis vs. live market value. Reuses build_fifo_report()
+    for cost basis/remaining qty/realized gain, then layers today's market
+    price + FX rate on top for the "live" figures.
+
+    A symbol whose live price can't be fetched degrades gracefully — its
+    current_value_thb/unrealized figures come back as None rather than
+    breaking the whole dashboard.
+    """
+    sections = build_fifo_report(owner)
+
+    try:
+        today_fx_rate = fetch_usd_thb_rate(date.today())
+    except FxRateFetchError:
+        today_fx_rate = None
+
+    rows = []
+    total_cost_thb = Decimal('0')
+    total_value_thb = Decimal('0')
+    total_unrealized_gain_thb = Decimal('0')
+    total_realized_gain_thb = Decimal('0')
+    has_full_value = today_fx_rate is not None
+
+    for section in sections:
+        symbol = section['symbol']
+        remaining_qty = section['remaining_qty']
+        cost_thb = section['remaining_cost_thb']
+        realized_gain_thb = section['realized_gain_thb']
+
+        total_cost_thb += cost_thb
+        total_realized_gain_thb += realized_gain_thb
+
+        current_value_thb = None
+        unrealized_gain_thb = None
+        unrealized_gain_pct = None
+
+        if today_fx_rate is not None and remaining_qty > 0:
+            try:
+                current_price_usd = fetch_current_price(symbol.ticker)
+            except PriceFetchError:
+                has_full_value = False
+            else:
+                current_value_thb = remaining_qty * current_price_usd * today_fx_rate
+                unrealized_gain_thb = current_value_thb - cost_thb
+                if cost_thb > 0:
+                    unrealized_gain_pct = (unrealized_gain_thb / cost_thb) * 100
+        elif remaining_qty > 0:
+            has_full_value = False
+
+        if current_value_thb is not None:
+            total_value_thb += current_value_thb
+        if unrealized_gain_thb is not None:
+            total_unrealized_gain_thb += unrealized_gain_thb
+
+        rows.append({
+            'symbol': symbol,
+            'remaining_qty': remaining_qty,
+            'cost_thb': cost_thb,
+            'current_value_thb': current_value_thb,
+            'unrealized_gain_thb': unrealized_gain_thb,
+            'unrealized_gain_pct': unrealized_gain_pct,
+            'realized_gain_thb': realized_gain_thb,
+        })
+
+    allocation = [
+        {'ticker': row['symbol'].ticker, 'cost_thb': float(row['cost_thb'])}
+        for row in rows if row['cost_thb'] > 0
+    ]
+
+    return {
+        'rows': rows,
+        'allocation': allocation,
+        'total_cost_thb': total_cost_thb,
+        'total_value_thb': total_value_thb if has_full_value else None,
+        'total_unrealized_gain_thb': total_unrealized_gain_thb if has_full_value else None,
+        'total_realized_gain_thb': total_realized_gain_thb,
+    }
 
 
 @transaction.atomic

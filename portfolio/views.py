@@ -126,10 +126,20 @@ class SaleListView(LoginRequiredMixin, ListView):
 class PortfolioReportView(LoginRequiredMixin, View):
     def get(self, request):
         fmt = request.GET.get('format', 'csv')
-        sections = build_fifo_report(request.user, request.GET.get('symbol'))
+        symbol_id = request.GET.get('symbol')
+        sections = build_fifo_report(request.user, symbol_id)
 
         if fmt == 'pdf':
-            return reports.fifo_report_pdf_response('fifo_portfolio_report.pdf', sections)
+            owner_name = request.user.get_full_name() or request.user.username
+            symbol_filter_note = None
+            if symbol_id:
+                symbol = Symbol.objects.filter(pk=symbol_id).first()
+                if symbol:
+                    symbol_filter_note = symbol.ticker
+            return reports.fifo_report_pdf_response(
+                'fifo_portfolio_report.pdf', sections,
+                owner_name=owner_name, symbol_filter_note=symbol_filter_note,
+            )
         if fmt == 'csv':
             return reports.fifo_report_csv_response('fifo_portfolio_report.csv', sections)
         return HttpResponseBadRequest('Unknown report format.')

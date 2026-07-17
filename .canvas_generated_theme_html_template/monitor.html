@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Monitor | FIFO Stock Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=Chakra+Petch:wght@500;700&family=Inter:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+:root {
+  --bg-color: #0A0E1A;
+  --glass-bg: rgba(255,255,255,0.05);
+  --glass-border: rgba(0,240,255,0.15);
+  --text-primary: #E8ECF4;
+  --text-secondary: #8A94A6;
+  --accent-cyan: #00F0FF;
+  --accent-magenta: #FF2E93;
+  --accent-lime: #39FF14;
+  --accent-loss: #FF3B30;
+  --radius: 12px;
+  --blur: 12px;
+}
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  background-image: radial-gradient(rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: var(--text-primary);
+}
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  backdrop-filter: blur(var(--blur));
+  background: var(--glass-bg);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1.5rem;
+  z-index: 1000;
+}
+.navbar__logo {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 1.2rem;
+  color: var(--accent-cyan);
+  font-weight: 700;
+}
+.navbar__links {
+  display: flex;
+  gap: 1.2rem;
+}
+.navbar__link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.navbar__link:hover, .navbar__link--active {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 6px var(--accent-cyan);
+}
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.navbar__search input {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 0.3rem 0.6rem;
+  color: var(--text-primary);
+}
+.navbar__icon, .navbar__avatar {
+  cursor: pointer;
+}
+.navbar__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent-magenta);
+}
+.main {
+  padding-top: 80px;
+  padding: 80px 2rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+.header__title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+.header__select {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  padding: 0.5rem 1rem;
+  backdrop-filter: blur(var(--blur));
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+@media (max-width: 1100px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .stats { grid-template-columns: 1fr; }
+}
+.stat-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(var(--blur));
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.stat-card__label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.stat-card__value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.4rem;
+}
+.chart-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(var(--blur));
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+.chart-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.chart-panel__toggles {
+  display: flex;
+  gap: 0.5rem;
+}
+.chart-panel__toggle {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  border-radius: var(--radius);
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.chart-panel__toggle:hover, .chart-panel__toggle--active {
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 6px var(--accent-cyan);
+}
+#chart-container {
+  min-height: 400px;
+}
+.chart-panel__legend {
+  margin-top: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.secondary {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.secondary__left, .secondary__right {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(var(--blur));
+  padding: 1rem;
+}
+.secondary__left {
+  flex: 1 1 60%;
+}
+.secondary__right {
+  flex: 1 1 35%;
+}
+.holdings-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.holdings-table th, .holdings-table td {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.holdings-table th {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.holdings-table td.value {
+  font-family: 'IBM Plex Mono', monospace;
+}
+.gain { color: var(--accent-lime); }
+.loss { color: var(--accent-loss); }
+#allocation-container {
+  min-height: 280px;
+}
+.footer {
+  margin-top: 3rem;
+  border-top: 3px solid;
+  border-image: linear-gradient(to right, var(--accent-cyan), var(--accent-magenta)) 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+.footer__links {
+  display: flex;
+  gap: 1rem;
+}
+.footer__status {
+  background: rgba(57,255,20,0.1);
+  color: var(--accent-lime);
+  border: 1px solid var(--accent-lime);
+  border-radius: 999px;
+  padding: 0.2rem 0.8rem;
+  font-weight: 500;
+}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar__logo">FIFO Stock Tracker</div>
+  <div class="navbar__links">
+    <a href="#" class="navbar__link">Buy Lots</a>
+    <a href="#" class="navbar__link">Sell</a>
+    <a href="#" class="navbar__link">Reports</a>
+    <a href="#" class="navbar__link">Symbols</a>
+    <a href="#" class="navbar__link navbar__link--active">Monitor</a>
+  </div>
+  <div class="navbar__actions">
+    <div class="navbar__search"><input type="text" placeholder="Search..."></div>
+    <div class="navbar__icon">🔔</div>
+    <div class="navbar__avatar"></div>
+  </div>
+</nav>
+
+<main class="main">
+  <header class="header">
+    <h1 class="header__title">Portfolio Monitor</h1>
+    <select class="header__select">
+      <option>All Holdings (Portfolio)</option>
+      <option>AAPL</option>
+      <option>TSLA</option>
+      <option>MSFT</option>
+    </select>
+  </header>
+
+  <section class="stats">
+    <div class="stat-card">
+      <div class="stat-card__label">Total Portfolio Value</div>
+      <div class="stat-card__value">$125,430.25</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__label">Total Cost Basis</div>
+      <div class="stat-card__value">$98,200.00</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__label">Unrealized Gain/Loss</div>
+      <div class="stat-card__value gain">+$27,230.25 (+27.7%)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__label">Realized Gain/Loss</div>
+      <div class="stat-card__value gain">+$4,120.00</div>
+    </div>
+  </section>
+
+  <section class="chart-panel">
+    <div class="chart-panel__header">
+      <div class="chart-panel__title">Performance Chart</div>
+      <div class="chart-panel__toggles">
+        <button class="chart-panel__toggle chart-panel__toggle--active">1D</button>
+        <button class="chart-panel__toggle">1W</button>
+        <button class="chart-panel__toggle">1M</button>
+        <button class="chart-panel__toggle">3M</button>
+        <button class="chart-panel__toggle">1Y</button>
+        <button class="chart-panel__toggle">ALL</button>
+      </div>
+    </div>
+    <div id="chart-container"></div>
+    <div class="chart-panel__legend">Legend: Portfolio Value, Benchmark</div>
+  </section>
+
+  <section class="secondary">
+    <div class="secondary__left">
+      <h2 class="section-title">Holdings Breakdown</h2>
+      <table class="holdings-table">
+        <thead>
+          <tr><th>Symbol</th><th>Shares</th><th>Value</th><th>Gain/Loss %</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>AAPL</td><td>120</td><td class="value">$24,600</td><td class="gain">+12.4%</td></tr>
+          <tr><td>TSLA</td><td>50</td><td class="value">$13,500</td><td class="loss">-3.2%</td></tr>
+          <tr><td>MSFT</td><td>80</td><td class="value">$28,800</td><td class="gain">+8.1%</td></tr>
+          <tr><td>AMZN</td><td>40</td><td class="value">$12,400</td><td class="gain">+5.6%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="secondary__right">
+      <h2 class="section-title">Portfolio Allocation</h2>
+      <div id="allocation-container"></div>
+      <div class="chart-panel__legend">Legend: AAPL, TSLA, MSFT, AMZN</div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div>© 2026 FIFO Stock Tracker</div>
+  <div class="footer__links">
+    <a href="#" class="navbar__link">Privacy</a>
+    <a href="#" class="navbar__link">Terms</a>
+    <a href="#" class="navbar__link">Support</a>
+  </div>
+  <div class="footer__status">System Online</div>
+</footer>
+
+<script>
+document.querySelectorAll('.chart-panel__toggle').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.chart-panel__toggle').forEach(b=>b.classList.remove('chart-panel__toggle--active'));
+    btn.classList.add('chart-panel__toggle--active');
+  });
+});
+</script>
+</body>
+</html>

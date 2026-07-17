@@ -33,6 +33,12 @@ def _money(value):
     return f"{Decimal(value).quantize(Decimal('0.01')):,}"
 
 
+def _money_thb(value):
+    """THB-prefixed comma-grouped 2dp display — for PDF totals/values only
+    (CSV keeps bare numbers since it may feed further processing)."""
+    return f"THB {_money(value)}"
+
+
 def _lot_status(lot):
     return 'Open' if lot.qty_remaining > 0 else 'Fully Consumed'
 
@@ -123,17 +129,21 @@ def _lot_table(lots):
     for lot in lots:
         rows.append([
             lot.buy_date.isoformat(), f'{lot.price_usd:.2f}', _fmt_qty(lot.qty),
-            f'{lot.fx_rate_usd_thb:.4f}', _money(lot.cost_thb), _fmt_qty(lot.qty_remaining), _lot_status(lot),
+            f'{lot.fx_rate_usd_thb:.4f}', _money_thb(lot.cost_thb), _fmt_qty(lot.qty_remaining), _lot_status(lot),
         ])
+    last_row = len(rows) - 1
     table = Table(rows, repeatRows=1, hAlign='LEFT')
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), HEADER_BG),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, HEADER_BG),
+        ('TEXTCOLOR', (0, 0), (-1, 0), HEADER_BG),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 8),
         ('ALIGN', (1, 1), (-2, -1), 'RIGHT'),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f4f4f4')]),
+        ('LINEBELOW', (0, 1), (-1, last_row), 0.5, colors.HexColor('#dddddd')),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f7f7f7')]),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
     ]))
     return table
 
@@ -148,22 +158,26 @@ def _sale_table(sales):
         rows.append([
             sale.sell_date.isoformat(), _fmt_qty(sale.qty_sold), f'{sale.sale_price_usd:.2f}',
             f'{sale.fee_usd:.2f}', f'{sale.fx_rate_usd_thb:.4f}',
-            _money(sale.proceeds_thb), _money(sale.total_cost_basis_thb), _money(sale.capital_gain_thb),
+            _money_thb(sale.proceeds_thb), _money_thb(sale.total_cost_basis_thb), _money_thb(sale.capital_gain_thb),
         ])
         for alloc in sale.allocations_sorted:
             rows.append([
                 f'  from lot {alloc.lot.buy_date.isoformat()}', _fmt_qty(alloc.qty_allocated),
-                '', '', '', '', _money(alloc.cost_basis_thb), '',
+                '', '', '', '', _money_thb(alloc.cost_basis_thb), '',
             ])
 
+    last_row = len(rows) - 1
     table = Table(rows, repeatRows=1, hAlign='LEFT')
     style = [
-        ('BACKGROUND', (0, 0), (-1, 0), HEADER_BG),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, HEADER_BG),
+        ('TEXTCOLOR', (0, 0), (-1, 0), HEADER_BG),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 8),
         ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('LINEBELOW', (0, 1), (-1, last_row), 0.5, colors.HexColor('#dddddd')),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
     ]
     for sale, row_index in zip(sales, gain_row_indexes):
         color = GAIN_COLOR if sale.capital_gain_thb >= 0 else LOSS_COLOR
@@ -172,7 +186,58 @@ def _sale_table(sales):
     return table
 
 
-def fifo_report_pdf_response(filename, sections):
+def _cover_page(owner_name, sections, grand_open_cost, grand_realized_gain, symbol_filter_note):
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('CoverTitle', parent=styles['Title'], alignment=TA_CENTER, fontSize=22)
+    subtitle_style = ParagraphStyle(
+        'CoverSubtitle', parent=styles['Normal'], alignment=TA_CENTER,
+        fontSize=11, textColor=colors.HexColor('#555555'), spaceBefore=4, spaceAfter=2,
+    )
+
+    elements = [
+        Spacer(1, 40 * mm),
+        Paragraph('FIFO Portfolio Report', title_style),
+        Spacer(1, 8),
+    ]
+    if owner_name:
+        elements.append(Paragraph(owner_name, subtitle_style))
+    elements.append(Paragraph(f'Generated {timezone.now():%Y-%m-%d %H:%M}', subtitle_style))
+    if symbol_filter_note:
+        elements.append(Paragraph(f'Filtered to: {symbol_filter_note}', subtitle_style))
+
+    elements.append(Spacer(1, 16 * mm))
+
+    totals_rows = [
+        ['Open Cost Basis (THB)', 'Realized Gain/Loss (THB)'],
+        [_money_thb(grand_open_cost), _money_thb(grand_realized_gain)],
+    ]
+    totals_table = Table(totals_rows, hAlign='CENTER', colWidths=[70 * mm, 70 * mm])
+    totals_table.setStyle(TableStyle([
+        ('LINEBELOW', (0, 0), (-1, 0), 1, HEADER_BG),
+        ('TEXTCOLOR', (0, 0), (-1, 0), HEADER_BG),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('FONTSIZE', (0, 1), (-1, 1), 13),
+        ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TEXTCOLOR', (1, 1), (1, 1), GAIN_COLOR if grand_realized_gain >= 0 else LOSS_COLOR),
+    ]))
+    elements.append(totals_table)
+
+    if sections:
+        elements.append(Spacer(1, 12 * mm))
+        elements.append(Paragraph(
+            'Tickers covered: ' + ', '.join(section['symbol'].ticker for section in sections),
+            ParagraphStyle('CoverTickers', parent=styles['Normal'], alignment=TA_CENTER, fontSize=9,
+                           textColor=colors.HexColor('#555555')),
+        ))
+
+    return elements
+
+
+def fifo_report_pdf_response(filename, sections, owner_name=None, symbol_filter_note=None):
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer, pagesize=A4,
@@ -183,9 +248,12 @@ def fifo_report_pdf_response(filename, sections):
     heading_style = styles['Heading2']
     summary_style = ParagraphStyle('Summary', parent=styles['Normal'], fontSize=10, spaceBefore=6, spaceAfter=6)
 
-    elements = []
-    grand_open_cost = Decimal('0')
-    grand_realized_gain = Decimal('0')
+    grand_open_cost = sum((section['remaining_cost_thb'] for section in sections), Decimal('0'))
+    grand_realized_gain = sum((section['realized_gain_thb'] for section in sections), Decimal('0'))
+
+    elements = _cover_page(owner_name, sections, grand_open_cost, grand_realized_gain, symbol_filter_note)
+    if sections:
+        elements.append(PageBreak())
 
     for index, section in enumerate(sections):
         symbol = section['symbol']
@@ -201,13 +269,10 @@ def fifo_report_pdf_response(filename, sections):
         elements.append(Spacer(1, 8))
 
         elements.append(Paragraph(
-            f"<b>Ticker Total Realized Gain/Loss (THB): {_money(section['realized_gain_thb'])}</b>"
-            f"&nbsp;&nbsp;&nbsp; Open Cost Basis Remaining (THB): {_money(section['remaining_cost_thb'])}",
+            f"<b>Ticker Total Realized Gain/Loss: {_money_thb(section['realized_gain_thb'])}</b>"
+            f"&nbsp;&nbsp;&nbsp; Open Cost Basis Remaining: {_money_thb(section['remaining_cost_thb'])}",
             summary_style,
         ))
-
-        grand_open_cost += section['remaining_cost_thb']
-        grand_realized_gain += section['realized_gain_thb']
 
         if index < len(sections) - 1:
             elements.append(PageBreak())
@@ -219,18 +284,21 @@ def fifo_report_pdf_response(filename, sections):
 
     summary_rows = [['Ticker', 'Open Cost Basis (THB)', 'Realized Gain/Loss (THB)']]
     for section in sections:
-        summary_rows.append([section['symbol'].ticker, _money(section['remaining_cost_thb']), _money(section['realized_gain_thb'])])
-    summary_rows.append(['TOTAL', _money(grand_open_cost), _money(grand_realized_gain)])
+        summary_rows.append([section['symbol'].ticker, _money_thb(section['remaining_cost_thb']), _money_thb(section['realized_gain_thb'])])
+    summary_rows.append(['TOTAL', _money_thb(grand_open_cost), _money_thb(grand_realized_gain)])
 
     summary_table = Table(summary_rows, hAlign='LEFT')
     last_row = len(summary_rows) - 1
     summary_style_cmds = [
-        ('BACKGROUND', (0, 0), (-1, 0), HEADER_BG),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, HEADER_BG),
+        ('TEXTCOLOR', (0, 0), (-1, 0), HEADER_BG),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('LINEBELOW', (0, 1), (-1, last_row - 1), 0.5, colors.HexColor('#dddddd')),
         ('FONTNAME', (0, last_row), (-1, last_row), 'Helvetica-Bold'),
         ('LINEABOVE', (0, last_row), (-1, last_row), 1, colors.black),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
     ]
     for row_index, section in enumerate(sections, start=1):
         color = GAIN_COLOR if section['realized_gain_thb'] >= 0 else LOSS_COLOR

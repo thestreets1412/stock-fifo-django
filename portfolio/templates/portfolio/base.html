@@ -25,9 +25,23 @@
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
       <div class="container">
-        <a class="navbar-brand" href="{% url 'lot_list' %}"
+        <!-- <a class="navbar-brand" href="{% url 'lot_list' %}"
           >FIFO Stock Tracker</a
-        >
+        > -->
+        <a href="{% url 'lot_list' %}" class="navbar-brand" data-view-target="buy" aria-label="FIFO Tracker home">
+          <span class="brand__mark" aria-hidden="true">
+            <svg class="icon-logo" viewBox="0 0 48 48" fill="none">
+              <path d="M24 3.8 40.6 13.4v19.2L24 42.2 7.4 32.6V13.4L24 3.8Z" stroke="currentColor" stroke-width="1.5"></path>
+              <ellipse cx="24" cy="24" rx="20" ry="8.2" transform="rotate(-31 24 24)" stroke="currentColor" stroke-width="1.2" opacity=".72"></ellipse>
+              <circle cx="24" cy="24" r="3.2" fill="currentColor"></circle>
+              <circle cx="39.1" cy="14.2" r="2.2" fill="#FF2E93"></circle>
+            </svg>
+          </span> 
+          <span 
+          data-template-id="brand-wordmark" 
+          class="brand__wordmark canva-text" 
+          style="color: rgb(232, 236, 244); font-weight: 700; font-style: normal; font-size: 16px; letter-spacing: 0.13rem;">FIFO TRACKER</span>
+        </a>
         <button
           class="navbar-toggler"
           type="button"

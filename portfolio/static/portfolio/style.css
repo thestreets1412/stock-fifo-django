@@ -22,7 +22,10 @@
   --cyan-glow: 0 0 20px rgba(0, 240, 255, 0.35);
   --magenta-glow: 0 0 18px rgba(255, 46, 147, 0.28);
 }
-
+.icon-logo {
+  width: 48px;
+  height: 48px;
+}
 body {
   width: auto !important;
   margin: 40px auto;

@@ -25,9 +25,9 @@
     </div>
     <div class="col-auto">
         <select name="symbol" id="symbol" class="form-select" onchange="this.form.submit()">
-            <option value="">-- All Symbols --</option>
+            <option value="" style="color: black;">-- All Symbols --</option>
             {% for symbol in symbols %}
-                <option value="{{ symbol.id }}" {% if selected_symbol_id|stringformat:"s" == symbol.id|stringformat:"s" %}selected{% endif %}>
+                <option value="{{ symbol.id }}" style="color: black;" {% if selected_symbol_id|stringformat:"s" == symbol.id|stringformat:"s" %}selected{% endif %}>
                     {{ symbol.ticker }}
                 </option>
             {% endfor %}

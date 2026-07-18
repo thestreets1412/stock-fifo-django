@@ -242,6 +242,7 @@ a:hover {
   color: var(--muted);
 }
 
+
 .col-form-label {
   color: var(--muted);
 }
@@ -252,6 +253,7 @@ a:hover {
   border: 1px solid rgba(0, 240, 255, 0.32);
   border-radius: var(--radius-md);
 }
+
 
 /* ---- Alerts ---- */
 .alert-danger {

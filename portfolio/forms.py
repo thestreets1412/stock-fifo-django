@@ -4,6 +4,13 @@ from .models import StockLot, Symbol
 from .services import fetch_usd_thb_rate, FxRateFetchError
 
 
+class StyledSelect(forms.Select):
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        # if value == "":  # the empty/placeholder option
+        option['attrs']['style'] = 'color: black;'
+        return option
+
 class BootstrapAuthenticationForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'autofocus': True}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
@@ -14,7 +21,7 @@ class StockLotForm(forms.ModelForm):
         model = StockLot
         fields = ['symbol', 'buy_date', 'price_usd', 'qty', 'fx_rate_usd_thb', 'evidence']
         widgets = {
-            'symbol': forms.Select(attrs={'class': 'form-select'}),
+            'symbol': StyledSelect(attrs={'class': 'form-select'}),
             'buy_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'price_usd': forms.NumberInput(attrs={'class': 'form-control'}),
             'qty': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -48,7 +55,7 @@ class SellForm(forms.Form):
     """
     symbol = forms.ModelChoiceField(
         queryset=Symbol.objects.all(),
-        widget=forms.Select(attrs={'class': 'form-select'}),
+        widget=StyledSelect(attrs={'class': 'form-select'}),
     )
     sell_date = forms.DateField(
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),

@@ -58,7 +58,7 @@ python -m venv .venv
 source .venv/bin/activate     # macOS/Linux
 
 # 3. Install dependencies
-pip install -r requirments.txt
+pip install -r requirements.txt
 
 # 4. Configure environment variables
 # Create a .env file in the project root:

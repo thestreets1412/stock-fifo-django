@@ -8,7 +8,7 @@ from .models import Symbol, StockLot, Sale
 from .forms import StockLotForm, SellForm
 from .services import (
     record_sale, InsufficientLotsError, get_user_lots, get_user_sales,
-    build_fifo_report, build_dashboard_summary,
+    build_fifo_report, build_dashboard_summary, parse_date_param,
 )
 from . import reports
 
@@ -39,14 +39,23 @@ class LotListView(LoginRequiredMixin, ListView):
     context_object_name = 'lots'
 
     def get_queryset(self):
-        return get_user_lots(self.request.user, self.request.GET.get('symbol'))
+        return get_user_lots(
+            self.request.user,
+            self.request.GET.get('symbol'),
+            parse_date_param(self.request.GET.get('date_from')),
+            parse_date_param(self.request.GET.get('date_to')),
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        date_from = parse_date_param(self.request.GET.get('date_from'))
+        date_to = parse_date_param(self.request.GET.get('date_to'))
         context['symbols'] = Symbol.objects.all()
         context['selected_symbol_id'] = self.request.GET.get('symbol', '')
+        context['selected_date_from'] = self.request.GET.get('date_from', '')
+        context['selected_date_to'] = self.request.GET.get('date_to', '')
         context['form'] = StockLotForm()
-        context['dashboard'] = build_dashboard_summary(self.request.user)
+        context['dashboard'] = build_dashboard_summary(self.request.user, date_from, date_to)
         return context
 
 class StockLotCreateView(LoginRequiredMixin, CreateView):
@@ -114,12 +123,19 @@ class SaleListView(LoginRequiredMixin, ListView):
     context_object_name = 'sales'
 
     def get_queryset(self):
-        return get_user_sales(self.request.user, self.request.GET.get('symbol'))
+        return get_user_sales(
+            self.request.user,
+            self.request.GET.get('symbol'),
+            parse_date_param(self.request.GET.get('date_from')),
+            parse_date_param(self.request.GET.get('date_to')),
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['symbols'] = Symbol.objects.all()
         context['selected_symbol_id'] = self.request.GET.get('symbol', '')
+        context['selected_date_from'] = self.request.GET.get('date_from', '')
+        context['selected_date_to'] = self.request.GET.get('date_to', '')
         context['form'] = SellForm()
         return context
 

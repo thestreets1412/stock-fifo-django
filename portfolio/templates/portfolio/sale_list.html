@@ -21,8 +21,20 @@
             {% endfor %}
         </select>
     </div>
+    <div class="col-auto">
+        <label for="date_from" class="col-form-label ps-3">From:</label>
+    </div>
+    <div class="col-auto">
+        <input type="date" name="date_from" id="date_from" class="form-control" value="{{ selected_date_from }}" onchange="this.form.submit()">
+    </div>
+    <div class="col-auto">
+        <label for="date_to" class="col-form-label ps-3">To:</label>
+    </div>
+    <div class="col-auto">
+        <input type="date" name="date_to" id="date_to" class="form-control" value="{{ selected_date_to }}" onchange="this.form.submit()">
+    </div>
     <div class="col-auto ms-auto d-flex gap-2">
-        <div class="dropdown">
+        <!-- <div class="dropdown">
             <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 FIFO Report
             </button>
@@ -30,7 +42,7 @@
                 <li><a class="dropdown-item" href="{% url 'fifo_report' %}?format=csv{% if selected_symbol_id %}&symbol={{ selected_symbol_id }}{% endif %}"><i class="bi bi-filetype-csv me-2"></i>Download CSV</a></li>
                 <li><a class="dropdown-item" href="{% url 'fifo_report' %}?format=pdf{% if selected_symbol_id %}&symbol={{ selected_symbol_id }}{% endif %}"><i class="bi bi-file-earmark-pdf me-2"></i>Download PDF</a></li>
             </ul>
-        </div>
+        </div> -->
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sellModal"><i class="bi bi-graph-up-arrow me-1"></i>Record Sell</button>
     </div>
 </form>
@@ -60,12 +72,12 @@
                 <td>{{ sale.sale_price_usd }}</td>
                 <td>{{ sale.fee_usd }}</td>
                 <td>{{ sale.proceeds_thb|floatformat:2 }}</td>
-                <td>{{ sale.total_cost_basis_thb|floatformat:2 }}</td>
+                <td>{{ sale.windowed_cost_basis_thb|floatformat:2 }}</td>
                 <td>
-                    {% if sale.capital_gain_thb >= 0 %}
-                        <span class="value-gain">+{{ sale.capital_gain_thb|floatformat:2 }}</span>
+                    {% if sale.windowed_capital_gain_thb >= 0 %}
+                        <span class="value-gain">+{{ sale.windowed_capital_gain_thb|floatformat:2 }}</span>
                     {% else %}
-                        <span class="value-loss">{{ sale.capital_gain_thb|floatformat:2 }}</span>
+                        <span class="value-loss">{{ sale.windowed_capital_gain_thb|floatformat:2 }}</span>
                     {% endif %}
                 </td>
                 <td>

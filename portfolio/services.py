@@ -8,7 +8,7 @@ from urllib.request import Request, urlopen
 import yfinance
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Sum
 
 from .models import StockLot, Sale, SaleAllocation, Symbol
 
@@ -28,6 +28,20 @@ class PriceFetchError(Exception):
     pass
 
 
+def parse_date_param(value):
+    """
+    Parses a GET-param date string ('YYYY-MM-DD') into a date, or None if
+    the value is missing/blank/malformed. Used by every view that accepts
+    an optional date_from/date_to filter.
+    """
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        return None
+
+
 def fetch_usd_thb_rate(rate_date):
     """
     Looks up the USD→THB rate for rate_date via the free, open-source,
@@ -43,14 +57,36 @@ def fetch_usd_thb_rate(rate_date):
         raise FxRateFetchError(f'Could not fetch USD/THB rate for {rate_date}: {exc}') from exc
 
 
-def get_user_lots(owner, symbol_id=None):
+def get_user_lots(owner, symbol_id=None, date_from=None, date_to=None):
     queryset = StockLot.objects.filter(owner=owner).select_related('symbol')
     if symbol_id:
         queryset = queryset.filter(symbol_id=symbol_id)
-    return queryset
+    if date_from:
+        queryset = queryset.filter(buy_date__gte=date_from)
+    if date_to:
+        queryset = queryset.filter(buy_date__lte=date_to)
+
+    if date_from or date_to:
+        allocation_filter = Q()
+        if date_from:
+            allocation_filter &= Q(allocations__sale__sell_date__gte=date_from)
+        if date_to:
+            allocation_filter &= Q(allocations__sale__sell_date__lte=date_to)
+        queryset = queryset.annotate(
+            windowed_qty_allocated=Sum('allocations__qty_allocated', filter=allocation_filter)
+        )
+    else:
+        queryset = queryset.annotate(
+            windowed_qty_allocated=Sum('allocations__qty_allocated')
+        )
+
+    lots = list(queryset)
+    for lot in lots:
+        lot.windowed_remaining = lot.qty - (lot.windowed_qty_allocated or Decimal('0'))
+    return lots
 
 
-def get_user_sales(owner, symbol_id=None):
+def get_user_sales(owner, symbol_id=None, date_from=None, date_to=None):
     queryset = (
         Sale.objects
         .filter(owner=owner)
@@ -59,14 +95,45 @@ def get_user_sales(owner, symbol_id=None):
     )
     if symbol_id:
         queryset = queryset.filter(symbol_id=symbol_id)
-    return queryset
+    if date_from:
+        queryset = queryset.filter(sell_date__gte=date_from)
+    if date_to:
+        queryset = queryset.filter(sell_date__lte=date_to)
+
+    if date_from or date_to:
+        lot_filter = Q()
+        if date_from:
+            lot_filter &= Q(allocations__lot__buy_date__gte=date_from)
+        if date_to:
+            lot_filter &= Q(allocations__lot__buy_date__lte=date_to)
+        queryset = queryset.annotate(
+            windowed_cost_basis_thb=Sum('allocations__cost_basis_thb', filter=lot_filter)
+        )
+    else:
+        queryset = queryset.annotate(
+            windowed_cost_basis_thb=Sum('allocations__cost_basis_thb')
+        )
+
+    sales = list(queryset)
+    for sale in sales:
+        cost_basis = sale.windowed_cost_basis_thb or Decimal('0')
+        sale.windowed_cost_basis_thb = cost_basis
+        sale.windowed_capital_gain_thb = sale.proceeds_thb - cost_basis
+    return sales
 
 
-def build_fifo_report(owner, symbol_id=None):
+def build_fifo_report(owner, symbol_id=None, date_from=None, date_to=None):
     """
     Groups every buy lot and sell allocation by ticker, in FIFO order, so a
     report can show — per symbol — which lots are still open, which are
     exhausted, and exactly which lots fed each sale.
+
+    When date_from/date_to are given, only lots bought and sales made
+    inside that window are considered anywhere in this function — see the
+    "Known tradeoff" note in docs/superpowers/plans/2026-07-19-date-range-filter.md
+    for what that means for cross-window sales. PortfolioReportView (the
+    downloadable FIFO Report) never passes these — it's out of scope for
+    this filter.
     """
     symbols = (
         Symbol.objects
@@ -79,18 +146,24 @@ def build_fifo_report(owner, symbol_id=None):
 
     sections = []
     for symbol in symbols:
-        lots = list(get_user_lots(owner, symbol.pk))  # Meta ordering = FIFO order
-        sales = sorted(get_user_sales(owner, symbol.pk), key=lambda sale: (sale.sell_date, sale.created_at))
+        lots = get_user_lots(owner, symbol.pk, date_from, date_to)  # Meta ordering = FIFO order
+        sales = sorted(
+            get_user_sales(owner, symbol.pk, date_from, date_to),
+            key=lambda sale: (sale.sell_date, sale.created_at),
+        )
+        if not lots and not sales:
+            continue
+
         for sale in sales:
             sale.allocations_sorted = sorted(sale.allocations.all(), key=lambda alloc: alloc.lot.buy_date)
 
         total_bought_qty = sum((lot.qty for lot in lots), Decimal('0'))
-        remaining_qty = sum((lot.qty_remaining for lot in lots), Decimal('0'))
+        remaining_qty = sum((lot.windowed_remaining for lot in lots), Decimal('0'))
         remaining_cost_thb = sum(
-            (lot.qty_remaining * lot.price_usd * lot.fx_rate_usd_thb for lot in lots), Decimal('0')
+            (lot.windowed_remaining * lot.price_usd * lot.fx_rate_usd_thb for lot in lots), Decimal('0')
         )
         total_sold_qty = sum((sale.qty_sold for sale in sales), Decimal('0'))
-        realized_gain_thb = sum((sale.capital_gain_thb for sale in sales), Decimal('0'))
+        realized_gain_thb = sum((sale.windowed_capital_gain_thb for sale in sales), Decimal('0'))
 
         sections.append({
             'symbol': symbol,
@@ -138,7 +211,7 @@ def fetch_current_price(ticker):
         executor.shutdown(wait=False)
 
 
-def build_dashboard_summary(owner):
+def build_dashboard_summary(owner, date_from=None, date_to=None):
     """
     Builds the home-page portfolio dashboard: totals plus a per-symbol
     breakdown of cost basis vs. live market value. Reuses build_fifo_report()
@@ -149,7 +222,7 @@ def build_dashboard_summary(owner):
     current_value_thb/unrealized figures come back as None rather than
     breaking the whole dashboard.
     """
-    sections = build_fifo_report(owner)
+    sections = build_fifo_report(owner, date_from=date_from, date_to=date_to)
 
     try:
         today_fx_rate = fetch_usd_thb_rate(date.today())

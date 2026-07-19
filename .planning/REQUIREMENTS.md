@@ -9,10 +9,10 @@ Requirements for this deployment milestone. Each maps to a roadmap phase.
 
 ### Settings Hardening
 
-- [ ] **SETTINGS-01**: `SECURE_PROXY_SSL_HEADER` is set so Django correctly trusts `X-Forwarded-Proto` from Cloudflare's tunnel (prevents an infinite HTTPS redirect loop)
-- [ ] **SETTINGS-02**: `SECURE_SSL_REDIRECT`, secure session/CSRF cookies, and HSTS settings are enabled correctly for production
-- [ ] **SETTINGS-03**: `CSRF_TRUSTED_ORIGINS` and `ALLOWED_HOSTS` are driven by `.env`, ready to take the real domain once acquired
-- [ ] **SETTINGS-04**: `DEBUG` defaults to `False` (fail-closed) in production; `python manage.py check --deploy` passes clean
+- [x] **SETTINGS-01**: `SECURE_PROXY_SSL_HEADER` is set so Django correctly trusts `X-Forwarded-Proto` from Cloudflare's tunnel (prevents an infinite HTTPS redirect loop)
+- [x] **SETTINGS-02**: `SECURE_SSL_REDIRECT`, secure session/CSRF cookies, and HSTS settings are enabled correctly for production
+- [x] **SETTINGS-03**: `CSRF_TRUSTED_ORIGINS` and `ALLOWED_HOSTS` are driven by `.env`, ready to take the real domain once acquired
+- [x] **SETTINGS-04**: `DEBUG` defaults to `False` (fail-closed) in production; `python manage.py check --deploy` passes clean
 
 ### Process Supervision
 
@@ -91,10 +91,10 @@ Which phases cover which requirements. Confirmed during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SETTINGS-01 | Phase 1 | Pending |
-| SETTINGS-02 | Phase 1 | Pending |
-| SETTINGS-03 | Phase 1 | Pending |
-| SETTINGS-04 | Phase 1 | Pending |
+| SETTINGS-01 | Phase 1 | Complete |
+| SETTINGS-02 | Phase 1 | Complete |
+| SETTINGS-03 | Phase 1 | Complete |
+| SETTINGS-04 | Phase 1 | Complete |
 | PROC-01 | Phase 2 | Pending |
 | PROC-02 | Phase 2 | Pending |
 | PROC-03 | Phase 2 | Pending |
@@ -115,6 +115,7 @@ Which phases cover which requirements. Confirmed during roadmap creation.
 | EDGE-05 | Phase 6 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 22 total
 - Mapped to phases: 22
 - Unmapped: 0 ✓

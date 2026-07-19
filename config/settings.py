@@ -32,6 +32,11 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv(
 # Security (production hardening — Phase 1: Cloudflare Tunnel deployment)
 # Real origin is supplied from .env in Phase 5; empty default is fail-closed.
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=Csv())
+# WARNING (T-01-01): trusting X-Forwarded-Proto is only safe once Gunicorn is
+# bound to loopback-only (Phase 2). Until that binding lands (or if it is ever
+# reverted/misconfigured), a network-adjacent client can forge this header and
+# bypass SECURE_SSL_REDIRECT. Do not expose this settings module to a
+# non-loopback interface before Phase 2's loopback binding is verified.
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG

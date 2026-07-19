@@ -122,11 +122,18 @@ def get_user_sales(owner, symbol_id=None, date_from=None, date_to=None):
     return sales
 
 
-def build_fifo_report(owner, symbol_id=None):
+def build_fifo_report(owner, symbol_id=None, date_from=None, date_to=None):
     """
     Groups every buy lot and sell allocation by ticker, in FIFO order, so a
     report can show — per symbol — which lots are still open, which are
     exhausted, and exactly which lots fed each sale.
+
+    When date_from/date_to are given, only lots bought and sales made
+    inside that window are considered anywhere in this function — see the
+    "Known tradeoff" note in docs/superpowers/plans/2026-07-19-date-range-filter.md
+    for what that means for cross-window sales. PortfolioReportView (the
+    downloadable FIFO Report) never passes these — it's out of scope for
+    this filter.
     """
     symbols = (
         Symbol.objects
@@ -139,18 +146,24 @@ def build_fifo_report(owner, symbol_id=None):
 
     sections = []
     for symbol in symbols:
-        lots = list(get_user_lots(owner, symbol.pk))  # Meta ordering = FIFO order
-        sales = sorted(get_user_sales(owner, symbol.pk), key=lambda sale: (sale.sell_date, sale.created_at))
+        lots = get_user_lots(owner, symbol.pk, date_from, date_to)  # Meta ordering = FIFO order
+        sales = sorted(
+            get_user_sales(owner, symbol.pk, date_from, date_to),
+            key=lambda sale: (sale.sell_date, sale.created_at),
+        )
+        if not lots and not sales:
+            continue
+
         for sale in sales:
             sale.allocations_sorted = sorted(sale.allocations.all(), key=lambda alloc: alloc.lot.buy_date)
 
         total_bought_qty = sum((lot.qty for lot in lots), Decimal('0'))
-        remaining_qty = sum((lot.qty_remaining for lot in lots), Decimal('0'))
+        remaining_qty = sum((lot.windowed_remaining for lot in lots), Decimal('0'))
         remaining_cost_thb = sum(
-            (lot.qty_remaining * lot.price_usd * lot.fx_rate_usd_thb for lot in lots), Decimal('0')
+            (lot.windowed_remaining * lot.price_usd * lot.fx_rate_usd_thb for lot in lots), Decimal('0')
         )
         total_sold_qty = sum((sale.qty_sold for sale in sales), Decimal('0'))
-        realized_gain_thb = sum((sale.capital_gain_thb for sale in sales), Decimal('0'))
+        realized_gain_thb = sum((sale.windowed_capital_gain_thb for sale in sales), Decimal('0'))
 
         sections.append({
             'symbol': symbol,

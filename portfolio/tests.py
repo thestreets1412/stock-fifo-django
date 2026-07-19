@@ -6,7 +6,10 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from .models import StockLot, Symbol, Sale, SaleAllocation
-from .services import PriceFetchError, build_dashboard_summary, parse_date_param, get_user_lots, get_user_sales
+from .services import (
+    PriceFetchError, build_dashboard_summary, build_fifo_report,
+    parse_date_param, get_user_lots, get_user_sales,
+)
 
 User = get_user_model()
 
@@ -218,3 +221,50 @@ class GetUserSalesDateFilterTests(TestCase):
             fetched.windowed_capital_gain_thb,
             fetched.proceeds_thb - Decimal('9900'),
         )
+
+
+class BuildFifoReportDateFilterTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(username='trader', password='pw')
+        self.aapl = Symbol.objects.create(ticker='AAPL')
+        self.tsla = Symbol.objects.create(ticker='TSLA')
+        self.lot = StockLot.objects.create(
+            owner=self.owner, symbol=self.aapl, buy_date='2026-01-01',
+            price_usd=Decimal('100'), qty=Decimal('10'), fx_rate_usd_thb=Decimal('33'),
+        )
+        # TSLA lot sits entirely outside the window used below.
+        StockLot.objects.create(
+            owner=self.owner, symbol=self.tsla, buy_date='2025-01-01',
+            price_usd=Decimal('200'), qty=Decimal('4'), fx_rate_usd_thb=Decimal('30'),
+        )
+
+    def test_symbols_with_no_data_in_window_are_omitted(self):
+        sections = build_fifo_report(
+            self.owner, date_from=date(2026, 1, 1), date_to=date(2026, 12, 31),
+        )
+        tickers = [section['symbol'].ticker for section in sections]
+        self.assertEqual(tickers, ['AAPL'])
+
+    def test_remaining_qty_and_cost_use_windowed_values(self):
+        sale = Sale.objects.create(
+            owner=self.owner, symbol=self.aapl, sell_date='2026-02-01',
+            qty_sold=Decimal('4'), sale_price_usd=Decimal('120'), fx_rate_usd_thb=Decimal('33'),
+        )
+        SaleAllocation.objects.create(
+            sale=sale, lot=self.lot, qty_allocated=Decimal('4'), cost_basis_thb=Decimal('13200'),
+        )
+        sections = build_fifo_report(
+            self.owner, date_from=date(2026, 1, 1), date_to=date(2026, 12, 31),
+        )
+        aapl_section = sections[0]
+        self.assertEqual(aapl_section['remaining_qty'], Decimal('6'))  # 10 - 4
+        # Fetch the sale through get_user_sales to get windowed_capital_gain_thb
+        fetched_sales = get_user_sales(
+            self.owner, self.aapl.pk, date_from=date(2026, 1, 1), date_to=date(2026, 12, 31)
+        )
+        self.assertEqual(aapl_section['realized_gain_thb'], fetched_sales[0].windowed_capital_gain_thb)
+
+    def test_no_date_filter_still_includes_all_symbols(self):
+        sections = build_fifo_report(self.owner)
+        tickers = sorted(section['symbol'].ticker for section in sections)
+        self.assertEqual(tickers, ['AAPL', 'TSLA'])

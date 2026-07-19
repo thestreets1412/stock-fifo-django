@@ -50,7 +50,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. After a full Pi reboot, gunicorn is running again automatically without any manual command
   4. If the gunicorn process is killed, systemd restarts it automatically (`Restart=on-failure`) and it runs as a non-root user
 
-**Plans**: TBD
+**Plans**: 2 plans
+
+- [ ] 02-01-PLAN.md — Gunicorn + WhiteNoise application serving config (deps, MIDDLEWARE + STORAGES, gunicorn_conf.py loopback bind) [PROC-01, PROC-03]
+- [ ] 02-02-PLAN.md — systemd unit (non-root, Restart=on-failure, boot-start, hardened) + blocking Pi hardware verification [PROC-02]
 
 ### Phase 3: Close Internet-Facing Security Gaps
 
@@ -114,7 +117,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Django Production Settings Hardening | 1/1 | Complete    | 2026-07-19 |
-| 2. Gunicorn + systemd Process Supervision | 0/TBD | Not started | - |
+| 2. Gunicorn + systemd Process Supervision | 0/2 | Not started | - |
 | 3. Close Internet-Facing Security Gaps | 0/TBD | Not started | - |
 | 4. Backup and Data Durability | 0/TBD | Not started | - |
 | 5. Domain, Tunnel & Go-Live | 0/TBD | Not started | - |

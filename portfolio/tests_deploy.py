@@ -73,6 +73,8 @@ class SettingsHardeningTests(TestCase):
             **os.environ,
             'DEBUG': 'False',
             'SECRET_KEY': TEST_SECRET_KEY,
+            'ALLOWED_HOSTS': 'testserver',
+            'CSRF_TRUSTED_ORIGINS': '',
         }
         result = subprocess.run(
             [sys.executable, 'manage.py', 'check', '--deploy', '--fail-level', 'WARNING'],

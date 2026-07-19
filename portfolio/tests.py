@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.urls import reverse
 
 from .models import StockLot, Symbol, Sale, SaleAllocation
 from .services import (
@@ -290,3 +291,79 @@ class BuildFifoReportDateFilterTests(TestCase):
         sections = build_fifo_report(self.owner)
         tickers = sorted(section['symbol'].ticker for section in sections)
         self.assertEqual(tickers, ['AAPL', 'TSLA'])
+
+
+class LotListViewDateFilterTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(username='trader', password='pw')
+        self.client.force_login(self.owner)
+        self.aapl = Symbol.objects.create(ticker='AAPL')
+        StockLot.objects.create(
+            owner=self.owner, symbol=self.aapl, buy_date='2025-01-01',
+            price_usd=Decimal('100'), qty=Decimal('10'), fx_rate_usd_thb=Decimal('33'),
+        )
+        StockLot.objects.create(
+            owner=self.owner, symbol=self.aapl, buy_date='2026-01-01',
+            price_usd=Decimal('100'), qty=Decimal('10'), fx_rate_usd_thb=Decimal('33'),
+        )
+
+    def test_date_from_and_to_filter_the_lots_table(self):
+        response = self.client.get(
+            reverse('lot_list'), {'date_from': '2026-01-01', 'date_to': '2026-12-31'},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['lots']), 1)
+        self.assertEqual(response.context['lots'][0].buy_date, date(2026, 1, 1))
+
+    def test_context_carries_selected_dates_for_template_round_trip(self):
+        response = self.client.get(
+            reverse('lot_list'), {'date_from': '2026-01-01', 'date_to': '2026-12-31'},
+        )
+        self.assertEqual(response.context['selected_date_from'], '2026-01-01')
+        self.assertEqual(response.context['selected_date_to'], '2026-12-31')
+
+    def test_no_date_params_shows_all_lots(self):
+        response = self.client.get(reverse('lot_list'))
+        self.assertEqual(len(response.context['lots']), 2)
+        self.assertEqual(response.context['selected_date_from'], '')
+        self.assertEqual(response.context['selected_date_to'], '')
+
+
+class SaleListViewDateFilterTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(username='trader', password='pw')
+        self.client.force_login(self.owner)
+        self.aapl = Symbol.objects.create(ticker='AAPL')
+        self.lot = StockLot.objects.create(
+            owner=self.owner, symbol=self.aapl, buy_date='2025-01-01',
+            price_usd=Decimal('100'), qty=Decimal('20'), fx_rate_usd_thb=Decimal('33'),
+        )
+        sale_early = Sale.objects.create(
+            owner=self.owner, symbol=self.aapl, sell_date='2025-06-01',
+            qty_sold=Decimal('5'), sale_price_usd=Decimal('120'), fx_rate_usd_thb=Decimal('33'),
+        )
+        SaleAllocation.objects.create(
+            sale=sale_early, lot=self.lot, qty_allocated=Decimal('5'), cost_basis_thb=Decimal('16500'),
+        )
+        sale_late = Sale.objects.create(
+            owner=self.owner, symbol=self.aapl, sell_date='2026-06-01',
+            qty_sold=Decimal('5'), sale_price_usd=Decimal('130'), fx_rate_usd_thb=Decimal('33'),
+        )
+        SaleAllocation.objects.create(
+            sale=sale_late, lot=self.lot, qty_allocated=Decimal('5'), cost_basis_thb=Decimal('16500'),
+        )
+
+    def test_date_from_and_to_filter_the_sales_table(self):
+        response = self.client.get(
+            reverse('sale_list'), {'date_from': '2026-01-01', 'date_to': '2026-12-31'},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['sales']), 1)
+        self.assertEqual(response.context['sales'][0].sell_date, date(2026, 6, 1))
+
+    def test_context_carries_selected_dates_for_template_round_trip(self):
+        response = self.client.get(
+            reverse('sale_list'), {'date_from': '2026-01-01', 'date_to': '2026-12-31'},
+        )
+        self.assertEqual(response.context['selected_date_from'], '2026-01-01')
+        self.assertEqual(response.context['selected_date_to'], '2026-12-31')

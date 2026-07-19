@@ -211,7 +211,7 @@ def fetch_current_price(ticker):
         executor.shutdown(wait=False)
 
 
-def build_dashboard_summary(owner):
+def build_dashboard_summary(owner, date_from=None, date_to=None):
     """
     Builds the home-page portfolio dashboard: totals plus a per-symbol
     breakdown of cost basis vs. live market value. Reuses build_fifo_report()
@@ -222,7 +222,7 @@ def build_dashboard_summary(owner):
     current_value_thb/unrealized figures come back as None rather than
     breaking the whole dashboard.
     """
-    sections = build_fifo_report(owner)
+    sections = build_fifo_report(owner, date_from=date_from, date_to=date_to)
 
     try:
         today_fx_rate = fetch_usd_thb_rate(date.today())

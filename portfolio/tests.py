@@ -72,6 +72,28 @@ class BuildDashboardSummaryTests(TestCase):
         # cost basis still shown even when live price fails
         self.assertEqual(summary['total_cost_thb'], Decimal('33000'))
 
+    @patch('portfolio.services.fetch_current_price')
+    @patch('portfolio.services.fetch_usd_thb_rate')
+    def test_date_filter_narrows_dashboard_to_window(self, mock_fx, mock_price):
+        mock_fx.return_value = Decimal('35')
+        mock_price.return_value = Decimal('150')
+
+        StockLot.objects.create(
+            owner=self.owner, symbol=self.aapl, buy_date='2025-01-01',
+            price_usd=Decimal('100'), qty=Decimal('10'), fx_rate_usd_thb=Decimal('33'),
+        )
+        StockLot.objects.create(
+            owner=self.owner, symbol=self.aapl, buy_date='2026-01-01',
+            price_usd=Decimal('100'), qty=Decimal('10'), fx_rate_usd_thb=Decimal('33'),
+        )
+
+        summary = build_dashboard_summary(
+            self.owner, date_from=date(2026, 1, 1), date_to=date(2026, 12, 31),
+        )
+
+        self.assertEqual(len(summary['rows']), 1)
+        self.assertEqual(summary['rows'][0]['remaining_qty'], Decimal('10'))  # only the 2026 lot
+
 
 class ParseDateParamTests(TestCase):
     def test_none_returns_none(self):

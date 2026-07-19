@@ -394,3 +394,39 @@ class LotListTemplateTests(TestCase):
         # onchange must appear on the same <select> tag as id="symbol"
         tag_end = content.index('>', symbol_select_start)
         self.assertIn('onchange="this.form.submit()"', content[symbol_select_start:tag_end])
+
+
+class SaleListTemplateTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(username='trader', password='pw')
+        self.client.force_login(self.owner)
+        self.aapl = Symbol.objects.create(ticker='AAPL')
+
+    def test_page_renders_from_to_inputs_with_selected_values(self):
+        response = self.client.get(
+            reverse('sale_list'), {'date_from': '2026-01-01', 'date_to': '2026-06-30'},
+        )
+        self.assertContains(response, 'name="date_from"')
+        self.assertContains(response, 'name="date_to"')
+        self.assertContains(response, 'value="2026-01-01"')
+        self.assertContains(response, 'value="2026-06-30"')
+        self.assertNotContains(response, 'date-condition-select')
+        self.assertNotContains(response, 'date-condition-control')
+
+    def test_capital_gain_column_uses_windowed_value(self):
+        lot = StockLot.objects.create(
+            owner=self.owner, symbol=self.aapl, buy_date='2026-01-01',
+            price_usd=Decimal('100'), qty=Decimal('10'), fx_rate_usd_thb=Decimal('33'),
+        )
+        sale = Sale.objects.create(
+            owner=self.owner, symbol=self.aapl, sell_date='2026-02-01',
+            qty_sold=Decimal('5'), sale_price_usd=Decimal('120'), fx_rate_usd_thb=Decimal('33'),
+        )
+        SaleAllocation.objects.create(
+            sale=sale, lot=lot, qty_allocated=Decimal('5'), cost_basis_thb=Decimal('16500'),
+        )
+        response = self.client.get(reverse('sale_list'))
+        # proceeds_thb = 5 * 120 * 33 = 19800
+        # windowed_capital_gain_thb = 19800 - 16500 = 3300
+        expected_gain = f"{Decimal('3300'):.2f}".lstrip('-')
+        self.assertContains(response, expected_gain)

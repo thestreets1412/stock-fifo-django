@@ -5,8 +5,8 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from .models import StockLot, Symbol
-from .services import PriceFetchError, build_dashboard_summary, parse_date_param
+from .models import StockLot, Symbol, Sale, SaleAllocation
+from .services import PriceFetchError, build_dashboard_summary, parse_date_param, get_user_lots
 
 User = get_user_model()
 
@@ -83,3 +83,70 @@ class ParseDateParamTests(TestCase):
     def test_malformed_string_returns_none(self):
         self.assertIsNone(parse_date_param('not-a-date'))
         self.assertIsNone(parse_date_param('2026-13-40'))
+
+
+class GetUserLotsDateFilterTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(username='trader', password='pw')
+        self.aapl = Symbol.objects.create(ticker='AAPL')
+        self.lot_jan = StockLot.objects.create(
+            owner=self.owner, symbol=self.aapl, buy_date='2026-01-10',
+            price_usd=Decimal('100'), qty=Decimal('10'), fx_rate_usd_thb=Decimal('33'),
+        )
+        self.lot_jun = StockLot.objects.create(
+            owner=self.owner, symbol=self.aapl, buy_date='2026-06-10',
+            price_usd=Decimal('120'), qty=Decimal('5'), fx_rate_usd_thb=Decimal('34'),
+        )
+
+    def test_no_date_filter_returns_all_lots_with_full_remaining(self):
+        lots = get_user_lots(self.owner)
+        self.assertEqual(len(lots), 2)
+        by_date = {lot.buy_date: lot for lot in lots}
+        self.assertEqual(by_date[date(2026, 1, 10)].windowed_remaining, Decimal('10'))
+        self.assertEqual(by_date[date(2026, 6, 10)].windowed_remaining, Decimal('5'))
+
+    def test_date_from_excludes_earlier_lots(self):
+        lots = get_user_lots(self.owner, date_from=date(2026, 3, 1))
+        self.assertEqual([lot.buy_date for lot in lots], [date(2026, 6, 10)])
+
+    def test_date_to_excludes_later_lots(self):
+        lots = get_user_lots(self.owner, date_to=date(2026, 3, 1))
+        self.assertEqual([lot.buy_date for lot in lots], [date(2026, 1, 10)])
+
+    def test_bounds_are_inclusive(self):
+        lots = get_user_lots(self.owner, date_from=date(2026, 1, 10), date_to=date(2026, 1, 10))
+        self.assertEqual([lot.buy_date for lot in lots], [date(2026, 1, 10)])
+
+    def test_windowed_remaining_excludes_out_of_window_sales(self):
+        sale_in_window = Sale.objects.create(
+            owner=self.owner, symbol=self.aapl, sell_date='2026-02-01',
+            qty_sold=Decimal('3'), sale_price_usd=Decimal('110'),
+            fx_rate_usd_thb=Decimal('33'),
+        )
+        SaleAllocation.objects.create(
+            sale=sale_in_window, lot=self.lot_jan, qty_allocated=Decimal('3'),
+            cost_basis_thb=Decimal('9900'),
+        )
+        sale_out_of_window = Sale.objects.create(
+            owner=self.owner, symbol=self.aapl, sell_date='2026-08-01',
+            qty_sold=Decimal('2'), sale_price_usd=Decimal('115'),
+            fx_rate_usd_thb=Decimal('33'),
+        )
+        SaleAllocation.objects.create(
+            sale=sale_out_of_window, lot=self.lot_jan, qty_allocated=Decimal('2'),
+            cost_basis_thb=Decimal('6600'),
+        )
+
+        # Window only covers Jan-Mar: the Feb sale counts against remaining,
+        # the Aug sale (outside window) must not.
+        lots = get_user_lots(
+            self.owner, date_from=date(2026, 1, 1), date_to=date(2026, 3, 1),
+        )
+        jan_lot = next(lot for lot in lots if lot.buy_date == date(2026, 1, 10))
+        self.assertEqual(jan_lot.windowed_remaining, Decimal('7'))  # 10 - 3, not 10 - 5
+
+        # No window: both sales count, matching the real qty_remaining property.
+        lots_unfiltered = get_user_lots(self.owner)
+        jan_lot_unfiltered = next(lot for lot in lots_unfiltered if lot.buy_date == date(2026, 1, 10))
+        self.assertEqual(jan_lot_unfiltered.windowed_remaining, Decimal('5'))  # 10 - 3 - 2
+        self.assertEqual(jan_lot_unfiltered.windowed_remaining, jan_lot_unfiltered.qty_remaining)

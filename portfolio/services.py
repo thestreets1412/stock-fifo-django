@@ -8,7 +8,7 @@ from urllib.request import Request, urlopen
 import yfinance
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Sum
 
 from .models import StockLot, Sale, SaleAllocation, Symbol
 
@@ -57,11 +57,33 @@ def fetch_usd_thb_rate(rate_date):
         raise FxRateFetchError(f'Could not fetch USD/THB rate for {rate_date}: {exc}') from exc
 
 
-def get_user_lots(owner, symbol_id=None):
+def get_user_lots(owner, symbol_id=None, date_from=None, date_to=None):
     queryset = StockLot.objects.filter(owner=owner).select_related('symbol')
     if symbol_id:
         queryset = queryset.filter(symbol_id=symbol_id)
-    return queryset
+    if date_from:
+        queryset = queryset.filter(buy_date__gte=date_from)
+    if date_to:
+        queryset = queryset.filter(buy_date__lte=date_to)
+
+    if date_from or date_to:
+        allocation_filter = Q()
+        if date_from:
+            allocation_filter &= Q(allocations__sale__sell_date__gte=date_from)
+        if date_to:
+            allocation_filter &= Q(allocations__sale__sell_date__lte=date_to)
+        queryset = queryset.annotate(
+            windowed_qty_allocated=Sum('allocations__qty_allocated', filter=allocation_filter)
+        )
+    else:
+        queryset = queryset.annotate(
+            windowed_qty_allocated=Sum('allocations__qty_allocated')
+        )
+
+    lots = list(queryset)
+    for lot in lots:
+        lot.windowed_remaining = lot.qty - (lot.windowed_qty_allocated or Decimal('0'))
+    return lots
 
 
 def get_user_sales(owner, symbol_id=None):

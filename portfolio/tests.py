@@ -367,3 +367,30 @@ class SaleListViewDateFilterTests(TestCase):
         )
         self.assertEqual(response.context['selected_date_from'], '2026-01-01')
         self.assertEqual(response.context['selected_date_to'], '2026-12-31')
+
+
+class LotListTemplateTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(username='trader', password='pw')
+        self.client.force_login(self.owner)
+        self.aapl = Symbol.objects.create(ticker='AAPL')
+
+    def test_page_renders_from_to_inputs_with_selected_values(self):
+        response = self.client.get(
+            reverse('lot_list'), {'date_from': '2026-01-01', 'date_to': '2026-06-30'},
+        )
+        self.assertContains(response, 'name="date_from"')
+        self.assertContains(response, 'name="date_to"')
+        self.assertContains(response, 'value="2026-01-01"')
+        self.assertContains(response, 'value="2026-06-30"')
+        self.assertNotContains(response, 'date-condition-select')
+        self.assertNotContains(response, 'date-condition-control')
+
+    def test_symbol_select_auto_submits(self):
+        response = self.client.get(reverse('lot_list'))
+        self.assertContains(response, 'id="symbol"')
+        content = response.content.decode()
+        symbol_select_start = content.index('id="symbol"')
+        # onchange must appear on the same <select> tag as id="symbol"
+        tag_end = content.index('>', symbol_select_start)
+        self.assertIn('onchange="this.form.submit()"', content[symbol_select_start:tag_end])

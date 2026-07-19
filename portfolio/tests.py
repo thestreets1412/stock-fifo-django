@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from .models import StockLot, Symbol, Sale, SaleAllocation
-from .services import PriceFetchError, build_dashboard_summary, parse_date_param, get_user_lots
+from .services import PriceFetchError, build_dashboard_summary, parse_date_param, get_user_lots, get_user_sales
 
 User = get_user_model()
 
@@ -150,3 +150,71 @@ class GetUserLotsDateFilterTests(TestCase):
         jan_lot_unfiltered = next(lot for lot in lots_unfiltered if lot.buy_date == date(2026, 1, 10))
         self.assertEqual(jan_lot_unfiltered.windowed_remaining, Decimal('5'))  # 10 - 3 - 2
         self.assertEqual(jan_lot_unfiltered.windowed_remaining, jan_lot_unfiltered.qty_remaining)
+
+
+class GetUserSalesDateFilterTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(username='trader', password='pw')
+        self.aapl = Symbol.objects.create(ticker='AAPL')
+        self.lot_in_window = StockLot.objects.create(
+            owner=self.owner, symbol=self.aapl, buy_date='2026-01-01',
+            price_usd=Decimal('100'), qty=Decimal('10'), fx_rate_usd_thb=Decimal('33'),
+        )
+        self.lot_out_of_window = StockLot.objects.create(
+            owner=self.owner, symbol=self.aapl, buy_date='2025-01-01',
+            price_usd=Decimal('80'), qty=Decimal('10'), fx_rate_usd_thb=Decimal('30'),
+        )
+
+    def test_no_date_filter_matches_existing_properties(self):
+        sale = Sale.objects.create(
+            owner=self.owner, symbol=self.aapl, sell_date='2026-02-01',
+            qty_sold=Decimal('5'), sale_price_usd=Decimal('120'),
+            fx_rate_usd_thb=Decimal('33'),
+        )
+        SaleAllocation.objects.create(
+            sale=sale, lot=self.lot_in_window, qty_allocated=Decimal('5'),
+            cost_basis_thb=Decimal('16500'),
+        )
+        sales = get_user_sales(self.owner)
+        fetched = sales[0]
+        self.assertEqual(fetched.windowed_cost_basis_thb, fetched.total_cost_basis_thb)
+        self.assertEqual(fetched.windowed_capital_gain_thb, fetched.capital_gain_thb)
+
+    def test_sell_date_bounds_filter_which_sales_are_returned(self):
+        Sale.objects.create(
+            owner=self.owner, symbol=self.aapl, sell_date='2026-01-15',
+            qty_sold=Decimal('1'), sale_price_usd=Decimal('120'), fx_rate_usd_thb=Decimal('33'),
+        )
+        Sale.objects.create(
+            owner=self.owner, symbol=self.aapl, sell_date='2026-09-15',
+            qty_sold=Decimal('1'), sale_price_usd=Decimal('120'), fx_rate_usd_thb=Decimal('33'),
+        )
+        sales = get_user_sales(self.owner, date_from=date(2026, 1, 1), date_to=date(2026, 3, 1))
+        self.assertEqual([s.sell_date for s in sales], [date(2026, 1, 15)])
+
+    def test_windowed_cost_basis_excludes_allocations_from_out_of_window_lots(self):
+        sale = Sale.objects.create(
+            owner=self.owner, symbol=self.aapl, sell_date='2026-02-01',
+            qty_sold=Decimal('6'), sale_price_usd=Decimal('120'),
+            fx_rate_usd_thb=Decimal('33'),
+        )
+        SaleAllocation.objects.create(
+            sale=sale, lot=self.lot_in_window, qty_allocated=Decimal('3'),
+            cost_basis_thb=Decimal('9900'),  # 3 * 100 * 33
+        )
+        SaleAllocation.objects.create(
+            sale=sale, lot=self.lot_out_of_window, qty_allocated=Decimal('3'),
+            cost_basis_thb=Decimal('7200'),  # 3 * 80 * 30
+        )
+
+        # Window excludes the 2025 lot -> only the in-window allocation's
+        # cost basis should count.
+        sales = get_user_sales(
+            self.owner, date_from=date(2026, 1, 1), date_to=date(2026, 12, 31),
+        )
+        fetched = sales[0]
+        self.assertEqual(fetched.windowed_cost_basis_thb, Decimal('9900'))
+        self.assertEqual(
+            fetched.windowed_capital_gain_thb,
+            fetched.proceeds_thb - Decimal('9900'),
+        )

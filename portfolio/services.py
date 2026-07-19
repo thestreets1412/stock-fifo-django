@@ -86,7 +86,7 @@ def get_user_lots(owner, symbol_id=None, date_from=None, date_to=None):
     return lots
 
 
-def get_user_sales(owner, symbol_id=None):
+def get_user_sales(owner, symbol_id=None, date_from=None, date_to=None):
     queryset = (
         Sale.objects
         .filter(owner=owner)
@@ -95,7 +95,31 @@ def get_user_sales(owner, symbol_id=None):
     )
     if symbol_id:
         queryset = queryset.filter(symbol_id=symbol_id)
-    return queryset
+    if date_from:
+        queryset = queryset.filter(sell_date__gte=date_from)
+    if date_to:
+        queryset = queryset.filter(sell_date__lte=date_to)
+
+    if date_from or date_to:
+        lot_filter = Q()
+        if date_from:
+            lot_filter &= Q(allocations__lot__buy_date__gte=date_from)
+        if date_to:
+            lot_filter &= Q(allocations__lot__buy_date__lte=date_to)
+        queryset = queryset.annotate(
+            windowed_cost_basis_thb=Sum('allocations__cost_basis_thb', filter=lot_filter)
+        )
+    else:
+        queryset = queryset.annotate(
+            windowed_cost_basis_thb=Sum('allocations__cost_basis_thb')
+        )
+
+    sales = list(queryset)
+    for sale in sales:
+        cost_basis = sale.windowed_cost_basis_thb or Decimal('0')
+        sale.windowed_cost_basis_thb = cost_basis
+        sale.windowed_capital_gain_thb = sale.proceeds_thb - cost_basis
+    return sales
 
 
 def build_fifo_report(owner, symbol_id=None):

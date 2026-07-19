@@ -383,8 +383,7 @@ class LotListTemplateTests(TestCase):
         self.assertContains(response, 'name="date_to"')
         self.assertContains(response, 'value="2026-01-01"')
         self.assertContains(response, 'value="2026-06-30"')
-        self.assertNotContains(response, 'date-condition-select')
-        self.assertNotContains(response, 'date-condition-control')
+        self.assertNotContains(response, 'dateCondition')
 
     def test_symbol_select_auto_submits(self):
         response = self.client.get(reverse('lot_list'))
@@ -410,8 +409,7 @@ class SaleListTemplateTests(TestCase):
         self.assertContains(response, 'name="date_to"')
         self.assertContains(response, 'value="2026-01-01"')
         self.assertContains(response, 'value="2026-06-30"')
-        self.assertNotContains(response, 'date-condition-select')
-        self.assertNotContains(response, 'date-condition-control')
+        self.assertNotContains(response, 'dateCondition')
 
     def test_capital_gain_column_uses_windowed_value(self):
         lot = StockLot.objects.create(

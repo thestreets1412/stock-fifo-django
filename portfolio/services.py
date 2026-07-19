@@ -28,6 +28,20 @@ class PriceFetchError(Exception):
     pass
 
 
+def parse_date_param(value):
+    """
+    Parses a GET-param date string ('YYYY-MM-DD') into a date, or None if
+    the value is missing/blank/malformed. Used by every view that accepts
+    an optional date_from/date_to filter.
+    """
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        return None
+
+
 def fetch_usd_thb_rate(rate_date):
     """
     Looks up the USD→THB rate for rate_date via the free, open-source,

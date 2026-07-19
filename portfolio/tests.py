@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -5,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from .models import StockLot, Symbol
-from .services import PriceFetchError, build_dashboard_summary
+from .services import PriceFetchError, build_dashboard_summary, parse_date_param
 
 User = get_user_model()
 
@@ -67,3 +68,18 @@ class BuildDashboardSummaryTests(TestCase):
         self.assertIsNone(summary['total_unrealized_gain_thb'])
         # cost basis still shown even when live price fails
         self.assertEqual(summary['total_cost_thb'], Decimal('33000'))
+
+
+class ParseDateParamTests(TestCase):
+    def test_none_returns_none(self):
+        self.assertIsNone(parse_date_param(None))
+
+    def test_empty_string_returns_none(self):
+        self.assertIsNone(parse_date_param(''))
+
+    def test_valid_iso_date_returns_date(self):
+        self.assertEqual(parse_date_param('2026-03-15'), date(2026, 3, 15))
+
+    def test_malformed_string_returns_none(self):
+        self.assertIsNone(parse_date_param('not-a-date'))
+        self.assertIsNone(parse_date_param('2026-13-40'))

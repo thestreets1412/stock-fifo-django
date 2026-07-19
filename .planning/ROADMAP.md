@@ -13,7 +13,7 @@ The app is already feature-complete and running locally on the Raspberry Pi. Thi
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Django Production Settings Hardening** - Django's security settings are production-ready and verified locally, before any public exposure
+- [x] **Phase 1: Django Production Settings Hardening** - Django's security settings are production-ready and verified locally, before any public exposure (completed 2026-07-19)
 - [ ] **Phase 2: Gunicorn + systemd Process Supervision** - The app runs as a resilient background service on the Pi instead of the dev server
 - [ ] **Phase 3: Close Internet-Facing Security Gaps** - Evidence file access and uploads are safe to expose once the app is reachable from the internet
 - [ ] **Phase 4: Backup and Data Durability** - The FIFO ledger survives an SD-card failure or unclean power loss
@@ -113,7 +113,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Django Production Settings Hardening | 1/1 | In Progress|  |
+| 1. Django Production Settings Hardening | 1/1 | Complete    | 2026-07-19 |
 | 2. Gunicorn + systemd Process Supervision | 0/TBD | Not started | - |
 | 3. Close Internet-Facing Security Gaps | 0/TBD | Not started | - |
 | 4. Backup and Data Durability | 0/TBD | Not started | - |

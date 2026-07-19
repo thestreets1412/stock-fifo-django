@@ -18,10 +18,10 @@ The app must be reachable securely over the internet via Cloudflare Tunnel — w
 - ✓ Per-user data isolation (owner-scoped queries, login required) — existing
 - ✓ Evidence upload for buy/sell transactions — existing
 - ✓ Runs on Raspberry Pi 4 (64-bit OS Lite) as a local server — existing (commit `091d58c`)
+- ✓ Django settings hardened for production (env-driven `CSRF_TRUSTED_ORIGINS`, `SECURE_SSL_REDIRECT`, secure cookies, HSTS gated on `DEBUG`, fail-closed `DEBUG` default) — Phase 1
 
 ### Active
 
-- [ ] Django settings hardened for production behind a reverse proxy (secure session/CSRF cookies, HSTS, `SECURE_PROXY_SSL_HEADER`)
 - [ ] Real domain acquired and configured (`CSRF_TRUSTED_ORIGINS`, Cloudflare Tunnel hostname)
 - [ ] Cloudflare Tunnel configured and running on the Pi, routing the domain to the local Django server
 - [ ] App reachable over the internet through the tunnel without exposing the Pi's IP or opening router ports
@@ -42,8 +42,8 @@ The app must be reachable securely over the internet via Cloudflare Tunnel — w
 - No domain owned yet — must be acquired before `CSRF_TRUSTED_ORIGINS` and the Tunnel hostname can be finalized
 - Single owner/user — no other accounts will use this instance
 - `.env` holds `DEBUG`/`SECRET_KEY`/`ALLOWED_HOSTS` via `python-decouple`; `DEBUG=True` locally, must be `False` on the Pi deployment
-- `config/settings.py` has an uncommitted diff adding `CSRF_TRUSTED_ORIGINS` (placeholder domain), `SECURE_PROXY_SSL_HEADER`, `SESSION_COOKIE_SECURE`/`CSRF_COOKIE_SECURE` (conditional on `DEBUG`), `SECURE_HSTS_SECONDS`
-- `CONCERNS.md` flags several pre-production items relevant to this milestone: `CSRF_TRUSTED_ORIGINS` placeholder (needs the real domain), missing file-upload validation, Django directly serving media files (not production-safe), `SECURE_SSL_REDIRECT` not yet set
+- `config/settings.py` is fully hardened as of Phase 1 (commits `64a392d`, `14f27b4`, `785a34e`): env-driven `CSRF_TRUSTED_ORIGINS`, `SECURE_SSL_REDIRECT`, `SECURE_PROXY_SSL_HEADER`, secure cookies, HSTS (all three settings correctly gated on `not DEBUG`), fail-closed `DEBUG` default. Trusting `X-Forwarded-Proto` is only safe once Phase 2 binds Gunicorn to loopback-only (documented inline, tracked as a hard Phase 2 prerequisite).
+- `CONCERNS.md` flags remaining pre-production items for later phases: missing file-upload validation (Phase 3), Django directly serving media files not production-safe (Phase 3)
 
 ## Constraints
 
@@ -61,6 +61,7 @@ The app must be reachable securely over the internet via Cloudflare Tunnel — w
 | Use Cloudflare Tunnel instead of port forwarding | Avoids exposing home IP / opening router ports on a residential network | — Pending |
 | `SESSION_COOKIE_SECURE` / `CSRF_COOKIE_SECURE` conditional on `not DEBUG` | Keeps local dev over plain HTTP working while enforcing secure cookies once `DEBUG=False` on the Pi | ✓ Good |
 | Defer multi-user support, new features, and test-suite work out of this milestone | Keep the deployment milestone focused and shippable | — Pending |
+| `SECURE_HSTS_SECONDS` gated on `not DEBUG` (`31536000 if not DEBUG else 0`) | Code review (Phase 1) caught it as ungated, unlike its sibling HSTS settings — an HTTPS-reached dev instance would otherwise lock a browser into forced-HTTPS for a year | ✓ Good |
 
 ## Evolution
 
@@ -80,4 +81,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-19 after initialization*
+*Last updated: 2026-07-19 after Phase 1 (Django Production Settings Hardening)*

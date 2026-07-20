@@ -414,14 +414,15 @@ class LotListTemplateTests(TestCase):
         self.assertContains(response, 'value="2026-06-30"')
         self.assertNotContains(response, 'dateCondition')
 
-    def test_symbol_select_auto_submits(self):
+    def test_search_button_submits_the_filter_form(self):
         response = self.client.get(reverse('lot_list'))
         self.assertContains(response, 'id="symbol"')
         content = response.content.decode()
         symbol_select_start = content.index('id="symbol"')
-        # onchange must appear on the same <select> tag as id="symbol"
+        # symbol select no longer auto-submits on change (replaced by an explicit Search button)
         tag_end = content.index('>', symbol_select_start)
-        self.assertIn('onchange="this.form.submit()"', content[symbol_select_start:tag_end])
+        self.assertNotIn('onchange="this.form.submit()"', content[symbol_select_start:tag_end])
+        self.assertIn('onclick="this.form.submit()"', content)
 
 
 class SaleListTemplateTests(TestCase):

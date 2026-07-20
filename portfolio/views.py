@@ -33,6 +33,24 @@ class SaleEvidenceView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         return Sale.objects.filter(owner = self.request.user)
 
+class HomePortfolioListView(LoginRequiredMixin, ListView):
+    model = StockLot
+    template_name = 'portfolio/home.html'
+    context_object_name = 'lots'
+
+    def get_queryset(self):
+        return get_user_lots(
+            self.request.user,
+            self.request.GET.get('symbol'),
+            parse_date_param(self.request.GET.get('date_from')),
+            parse_date_param(self.request.GET.get('date_to')),
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['dashboard'] = build_dashboard_summary(self.request.user)
+        return context
+
 class LotListView(LoginRequiredMixin, ListView):
     model = StockLot
     template_name = 'portfolio/lot_list.html'
@@ -159,3 +177,4 @@ class PortfolioReportView(LoginRequiredMixin, View):
         if fmt == 'csv':
             return reports.fifo_report_csv_response('fifo_portfolio_report.csv', sections)
         return HttpResponseBadRequest('Unknown report format.')
+    

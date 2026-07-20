@@ -9,4 +9,5 @@ urlpatterns = [
     path('lots/<int:pk>/evidence/', views.LotEvidenceView.as_view(), name = 'lot_evidence'),
     path('sales/<int:pk>/evidence/', views.SaleEvidenceView.as_view(), name = 'sale_evidence'),
     path('reports/fifo/', views.PortfolioReportView.as_view(), name = 'fifo_report'),
+    path('home/', views.HomePortfolioListView.as_view(), name = 'home'),
 ]

@@ -329,6 +329,35 @@ class LotListViewDateFilterTests(TestCase):
         self.assertEqual(response.context['selected_date_to'], '')
 
 
+class HomePortfolioListViewTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(username='trader', password='pw')
+        self.client.force_login(self.owner)
+        self.aapl = Symbol.objects.create(ticker='AAPL')
+        StockLot.objects.create(
+            owner=self.owner, symbol=self.aapl, buy_date='2026-01-01',
+            price_usd=Decimal('100'), qty=Decimal('10'), fx_rate_usd_thb=Decimal('33'),
+        )
+
+    def test_get_home_returns_200(self):
+        response = self.client.get(reverse('home'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_home_uses_home_template(self):
+        response = self.client.get(reverse('home'))
+        self.assertTemplateUsed(response, 'portfolio/home.html')
+
+    def test_home_context_has_dashboard_and_lots(self):
+        response = self.client.get(reverse('home'))
+        self.assertIn('dashboard', response.context)
+        self.assertEqual(len(response.context['lots']), 1)
+
+    def test_home_requires_login(self):
+        self.client.logout()
+        response = self.client.get(reverse('home'))
+        self.assertEqual(response.status_code, 302)
+
+
 class SaleListViewDateFilterTests(TestCase):
     def setUp(self):
         self.owner = User.objects.create_user(username='trader', password='pw')

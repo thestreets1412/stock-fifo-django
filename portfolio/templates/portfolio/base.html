@@ -28,7 +28,7 @@
         <!-- <a class="navbar-brand" href="{% url 'lot_list' %}"
           >FIFO Stock Tracker</a
         > -->
-        <a href="{% url 'lot_list' %}" class="navbar-brand" data-view-target="buy" aria-label="FIFO Tracker home">
+        <a href="{% url 'home' %}" class="navbar-brand" data-view-target="buy" aria-label="FIFO Tracker home">
           <span class="brand__mark" aria-hidden="true">
             <svg class="icon-logo" viewBox="0 0 48 48" fill="none">
               <path d="M24 3.8 40.6 13.4v19.2L24 42.2 7.4 32.6V13.4L24 3.8Z" stroke="currentColor" stroke-width="1.5"></path>
@@ -52,9 +52,9 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarContent">
           <ul class="navbar-nav me-auto">
-            <!-- <li class="nav-item">
-              <a class="nav-link" href="{% url 'lot_list' %}">Lots</a>
-            </li> -->
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'lot_list' %}">Stock Lots</a>
+            </li>
             <li class="nav-item">
               <a class="nav-link" href="{% url 'sale_list' %}">Sell History</a>
             </li>

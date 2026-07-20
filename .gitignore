@@ -1,12 +1,21 @@
 .venv/
 .env
-db.sqlite3
-__pycache__/
-*.pyc
+.agents/
+.superpowers/
+.canvas_generated_theme_html_template/
+.claude/
+docs/
 TestScript/
 media/
 graphify-out/
+__pycache__/
+agent/
+*.pyc
 CLAUDE.md
+<<<<<<< HEAD
 .planning/
 .superpowers/
 docs/
+=======
+db.sqlite3
+>>>>>>> bootstrap-fw

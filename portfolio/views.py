@@ -177,4 +177,3 @@ class PortfolioReportView(LoginRequiredMixin, View):
         if fmt == 'csv':
             return reports.fifo_report_csv_response('fifo_portfolio_report.csv', sections)
         return HttpResponseBadRequest('Unknown report format.')
-    

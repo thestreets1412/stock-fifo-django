@@ -132,7 +132,7 @@
         <label for="symbol" class="col-form-label">Symbol:</label>
     </div>
     <div class="col-auto">
-        <select name="symbol" id="symbol" class="form-select" onchange="this.form.submit()">
+        <select name="symbol" id="symbol" class="form-select">
             <option value="" style="color: black;">-- All Symbols --</option>
             {% for symbol in symbols %}
                 <option value="{{ symbol.id }}" style="color: black;" {% if selected_symbol_id|stringformat:"s" == symbol.id|stringformat:"s" %}selected{% endif %}>
@@ -145,13 +145,16 @@
         <label for="date_from" class="col-form-label ps-3">From:</label>
     </div>
     <div class="col-auto">
-        <input type="date" name="date_from" id="date_from" class="form-control" value="{{ selected_date_from }}" onchange="this.form.submit()">
+        <input type="date" name="date_from" id="date_from" class="form-control" value="{{ selected_date_from }}">
     </div>
     <div class="col-auto">
         <label for="date_to" class="col-form-label ps-3">To:</label>
     </div>
     <div class="col-auto">
-        <input type="date" name="date_to" id="date_to" class="form-control" value="{{ selected_date_to }}" onchange="this.form.submit()">
+        <input type="date" name="date_to" id="date_to" class="form-control" value="{{ selected_date_to }}">
+    </div>
+    <div class="col-auto gap-2">
+        <button type="button" class="btn btn-primary" onclick="this.form.submit()"><i class="bi bi-search me-1"></i>Search</button>
     </div>
     <div class="col-auto ms-auto d-flex gap-2">
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#lotModal"><i class="bi bi-cash-coin me-1"></i>Record Buy</button>

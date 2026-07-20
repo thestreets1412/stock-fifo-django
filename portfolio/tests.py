@@ -398,6 +398,55 @@ class SaleListViewDateFilterTests(TestCase):
         self.assertEqual(response.context['selected_date_to'], '2026-12-31')
 
 
+class SaleOrderingMatchesLotOrderingTests(TestCase):
+    """
+    /sales/ and /lots/ must both list oldest-first (FIFO order) so the two
+    tables read consistently. Regression test for the Sale.Meta.ordering
+    vs StockLot.Meta.ordering mismatch.
+    """
+
+    def setUp(self):
+        self.owner = User.objects.create_user(username='trader', password='pw')
+        self.client.force_login(self.owner)
+        self.aapl = Symbol.objects.create(ticker='AAPL')
+        self.lot = StockLot.objects.create(
+            owner=self.owner, symbol=self.aapl, buy_date='2025-01-01',
+            price_usd=Decimal('100'), qty=Decimal('20'), fx_rate_usd_thb=Decimal('33'),
+        )
+        self.sale_early = Sale.objects.create(
+            owner=self.owner, symbol=self.aapl, sell_date='2025-06-01',
+            qty_sold=Decimal('5'), sale_price_usd=Decimal('120'), fx_rate_usd_thb=Decimal('33'),
+        )
+        SaleAllocation.objects.create(
+            sale=self.sale_early, lot=self.lot, qty_allocated=Decimal('5'), cost_basis_thb=Decimal('16500'),
+        )
+        self.sale_late = Sale.objects.create(
+            owner=self.owner, symbol=self.aapl, sell_date='2026-06-01',
+            qty_sold=Decimal('5'), sale_price_usd=Decimal('130'), fx_rate_usd_thb=Decimal('33'),
+        )
+        SaleAllocation.objects.create(
+            sale=self.sale_late, lot=self.lot, qty_allocated=Decimal('5'), cost_basis_thb=Decimal('16500'),
+        )
+
+    def test_sale_model_default_ordering_is_oldest_first(self):
+        sales = list(Sale.objects.filter(owner=self.owner))
+        self.assertEqual([s.pk for s in sales], [self.sale_early.pk, self.sale_late.pk])
+
+    def test_sale_list_view_orders_sales_oldest_first(self):
+        response = self.client.get(reverse('sale_list'))
+        sales = list(response.context['sales'])
+        self.assertEqual([s.pk for s in sales], [self.sale_early.pk, self.sale_late.pk])
+
+    def test_sale_list_and_lot_list_agree_on_direction(self):
+        lot_response = self.client.get(reverse('lot_list'))
+        sale_response = self.client.get(reverse('sale_list'))
+        lots = list(lot_response.context['lots'])
+        sales = list(sale_response.context['sales'])
+        # StockLot is already oldest-first; Sale must match that direction.
+        self.assertEqual(lots[0].buy_date, date(2025, 1, 1))
+        self.assertEqual(sales[0].sell_date, date(2025, 6, 1))
+
+
 class LotListTemplateTests(TestCase):
     def setUp(self):
         self.owner = User.objects.create_user(username='trader', password='pw')

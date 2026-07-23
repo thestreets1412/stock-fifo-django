@@ -80,6 +80,11 @@ def get_user_lots(owner, symbol_id=None, date_from=None, date_to=None):
             windowed_qty_allocated=Sum('allocations__qty_allocated')
         )
 
+    # The Sum() annotation above turns this into a GROUP BY query, which makes
+    # Django drop StockLot.Meta.ordering (no ORDER BY is emitted). Re-assert
+    # FIFO order explicitly here — same key as Meta.ordering and record_sale().
+    queryset = queryset.order_by('buy_date', 'created_at')
+
     lots = list(queryset)
     for lot in lots:
         lot.windowed_remaining = lot.qty - (lot.windowed_qty_allocated or Decimal('0'))
@@ -146,7 +151,7 @@ def build_fifo_report(owner, symbol_id=None, date_from=None, date_to=None):
 
     sections = []
     for symbol in symbols:
-        lots = get_user_lots(owner, symbol.pk, date_from, date_to)  # Meta ordering = FIFO order
+        lots = get_user_lots(owner, symbol.pk, date_from, date_to)  # FIFO order — get_user_lots sorts explicitly
         sales = sorted(
             get_user_sales(owner, symbol.pk, date_from, date_to),
             key=lambda sale: (sale.sell_date, sale.created_at),

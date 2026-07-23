@@ -31,7 +31,7 @@ class StockLot(models.Model):
     evidence = models.ImageField(upload_to='lot_evidence/', blank=True, null=True)
 
     class Meta:
-        ordering = ['buy_date', 'created_at']  # FIFO order lives right here
+        ordering = ['buy_date', 'created_at']  # FIFO order lives right here , 'created_at'
 
     def __str__(self):
         return f"{self.symbol} lot @ {self.buy_date} ({self.qty})"
@@ -62,7 +62,7 @@ class Sale(models.Model):
     evidence = models.ImageField(upload_to='sale_evidence/', blank=True, null=True)
 
     class Meta:
-        ordering = ['-sell_date']
+        ordering = ['sell_date', 'created_at']  # FIFO order — matches StockLot.Meta.ordering 
 
     def __str__(self):
         return f"{self.symbol} sale @ {self.sell_date} ({self.qty_sold})"

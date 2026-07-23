@@ -178,6 +178,63 @@ class GetUserLotsDateFilterTests(TestCase):
         self.assertEqual(jan_lot_unfiltered.windowed_remaining, jan_lot_unfiltered.qty_remaining)
 
 
+class GetUserLotsOrderingTests(TestCase):
+    """
+    get_user_lots() annotates Sum('allocations__qty_allocated'), which turns
+    the query into a GROUP BY and makes Django drop Meta.ordering (no ORDER BY
+    in the SQL). Lots must still come back oldest-first (FIFO). Rows are
+    inserted newest-first on purpose so that id/insertion order is the REVERSE
+    of buy_date order — that is what makes the missing-ORDER BY bug observable
+    instead of accidentally passing.
+    """
+
+    def setUp(self):
+        self.owner = User.objects.create_user(username='trader', password='pw')
+        self.sgov = Symbol.objects.create(ticker='SGOV')
+        # Insert NEWEST buy_date first, OLDEST last, so insertion/id order is
+        # the opposite of the desired FIFO order.
+        self.dates = [
+            date(2026, 6, 29),
+            date(2026, 4, 10),
+            date(2026, 3, 31),
+            date(2026, 2, 24),
+            date(2026, 1, 5),
+        ]
+        self.lots = []
+        for i, d in enumerate(self.dates):
+            self.lots.append(StockLot.objects.create(
+                owner=self.owner, symbol=self.sgov, buy_date=d,
+                price_usd=Decimal('100'), qty=Decimal('10'), fx_rate_usd_thb=Decimal('33'),
+            ))
+        # Attach an allocation to a middle subset so the LEFT JOIN + GROUP BY
+        # path (the exact trigger seen in production) is exercised.
+        sale = Sale.objects.create(
+            owner=self.owner, symbol=self.sgov, sell_date='2026-07-01',
+            qty_sold=Decimal('4'), sale_price_usd=Decimal('120'), fx_rate_usd_thb=Decimal('33'),
+        )
+        SaleAllocation.objects.create(
+            sale=sale, lot=self.lots[2], qty_allocated=Decimal('2'), cost_basis_thb=Decimal('6600'),
+        )
+        SaleAllocation.objects.create(
+            sale=sale, lot=self.lots[3], qty_allocated=Decimal('2'), cost_basis_thb=Decimal('6600'),
+        )
+
+    def test_unfiltered_lots_returned_oldest_first(self):
+        lots = get_user_lots(self.owner, self.sgov.pk)
+        returned = [lot.buy_date for lot in lots]
+        self.assertEqual(returned, sorted(self.dates))
+
+    def test_date_filtered_lots_returned_oldest_first(self):
+        # Exercises the OTHER annotate branch (the one with filter=... on the
+        # aggregate), which also drops Meta.ordering.
+        lots = get_user_lots(
+            self.owner, self.sgov.pk,
+            date_from=date(2026, 1, 1), date_to=date(2026, 12, 31),
+        )
+        returned = [lot.buy_date for lot in lots]
+        self.assertEqual(returned, sorted(self.dates))
+
+
 class GetUserSalesDateFilterTests(TestCase):
     def setUp(self):
         self.owner = User.objects.create_user(username='trader', password='pw')
@@ -396,6 +453,55 @@ class SaleListViewDateFilterTests(TestCase):
         )
         self.assertEqual(response.context['selected_date_from'], '2026-01-01')
         self.assertEqual(response.context['selected_date_to'], '2026-12-31')
+
+
+class SaleOrderingMatchesLotOrderingTests(TestCase):
+    """
+    /sales/ and /lots/ must both list oldest-first (FIFO order) so the two
+    tables read consistently. Regression test for the Sale.Meta.ordering
+    vs StockLot.Meta.ordering mismatch.
+    """
+
+    def setUp(self):
+        self.owner = User.objects.create_user(username='trader', password='pw')
+        self.client.force_login(self.owner)
+        self.aapl = Symbol.objects.create(ticker='AAPL')
+        self.lot = StockLot.objects.create(
+            owner=self.owner, symbol=self.aapl, buy_date='2025-01-01',
+            price_usd=Decimal('100'), qty=Decimal('20'), fx_rate_usd_thb=Decimal('33'),
+        )
+        self.sale_early = Sale.objects.create(
+            owner=self.owner, symbol=self.aapl, sell_date='2025-06-01',
+            qty_sold=Decimal('5'), sale_price_usd=Decimal('120'), fx_rate_usd_thb=Decimal('33'),
+        )
+        SaleAllocation.objects.create(
+            sale=self.sale_early, lot=self.lot, qty_allocated=Decimal('5'), cost_basis_thb=Decimal('16500'),
+        )
+        self.sale_late = Sale.objects.create(
+            owner=self.owner, symbol=self.aapl, sell_date='2026-06-01',
+            qty_sold=Decimal('5'), sale_price_usd=Decimal('130'), fx_rate_usd_thb=Decimal('33'),
+        )
+        SaleAllocation.objects.create(
+            sale=self.sale_late, lot=self.lot, qty_allocated=Decimal('5'), cost_basis_thb=Decimal('16500'),
+        )
+
+    def test_sale_model_default_ordering_is_oldest_first(self):
+        sales = list(Sale.objects.filter(owner=self.owner))
+        self.assertEqual([s.pk for s in sales], [self.sale_early.pk, self.sale_late.pk])
+
+    def test_sale_list_view_orders_sales_oldest_first(self):
+        response = self.client.get(reverse('sale_list'))
+        sales = list(response.context['sales'])
+        self.assertEqual([s.pk for s in sales], [self.sale_early.pk, self.sale_late.pk])
+
+    def test_sale_list_and_lot_list_agree_on_direction(self):
+        lot_response = self.client.get(reverse('lot_list'))
+        sale_response = self.client.get(reverse('sale_list'))
+        lots = list(lot_response.context['lots'])
+        sales = list(sale_response.context['sales'])
+        # StockLot is already oldest-first; Sale must match that direction.
+        self.assertEqual(lots[0].buy_date, date(2025, 1, 1))
+        self.assertEqual(sales[0].sell_date, date(2025, 6, 1))
 
 
 class LotListTemplateTests(TestCase):

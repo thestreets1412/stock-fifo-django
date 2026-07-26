@@ -1,0 +1,77 @@
+﻿{
+    "bootstrap/bootstrap.bundle.min.js":  {
+                                              "url":  "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js",
+                                              "sha256":  "0833b2e9c3a26c258476c46266e6877fc75218625162e0460be9a3a098a61c6c",
+                                              "bytes":  80721
+                                          },
+    "bootstrap/bootstrap.bundle.min.js.map":  {
+                                                  "url":  "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js.map",
+                                                  "sha256":  "5e3e0763164143baaa1ca0706b6100ba0452f911d6ce9713b48e3dbe07b35125",
+                                                  "bytes":  332090
+                                              },
+    "bootstrap/bootstrap.min.css":  {
+                                        "url":  "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css",
+                                        "sha256":  "3c8f27e6009ccfd710a905e6dcf12d0ee3c6f2ac7da05b0572d3e0d12e736fc8",
+                                        "bytes":  232803
+                                    },
+    "bootstrap/bootstrap.min.css.map":  {
+                                            "url":  "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css.map",
+                                            "sha256":  "f12338536350a422c64d02d6e43ff1dea493c3156ad823fe19761cdd5d56c05b",
+                                            "bytes":  589892
+                                        },
+    "bootstrap-icons/bootstrap-icons.min.css":  {
+                                                    "url":  "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css",
+                                                    "sha256":  "f643d6fe7e679f9de3e16311600c5ef5cd6b098f7a3a8828fcc29255d2b33e62",
+                                                    "bytes":  85875
+                                                },
+    "bootstrap-icons/fonts/bootstrap-icons.woff":  {
+                                                       "url":  "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff",
+                                                       "sha256":  "bb1de989b83970f6f4e54de1cd974c5cba55b73582da5e1b225a6d0edf029483",
+                                                       "bytes":  176032
+                                                   },
+    "bootstrap-icons/fonts/bootstrap-icons.woff2":  {
+                                                        "url":  "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2",
+                                                        "sha256":  "476adf42b40325098fcfa8b36ab3e769186bb4f6ce6a249753e2e1a9c22bf99e",
+                                                        "bytes":  130396
+                                                    },
+    "chartjs/chart.umd.js.map":  {
+                                     "url":  "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js.map",
+                                     "sha256":  "e5849a182620bef84bb6cb8cf274e4766a5b1d6b31cc4538cf179397f14bb2c5",
+                                     "bytes":  955163
+                                 },
+    "chartjs/chart.umd.min.js":  {
+                                     "url":  "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js",
+                                     "sha256":  "b38076762f7363bc9e912b68b8e034826798db5df26bb61f000ec2e7a3137bc7",
+                                     "bytes":  205749
+                                 },
+    "fonts/fonts.css":  {
+                            "url":  "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700\u0026family=IBM+Plex+Mono:wght@400;500\u0026display=swap",
+                            "sha256":  "223768cc175bf94ba1dd8438f49c8d8cc598d2a6d989dc84c8cfeb1e59f6713f",
+                            "bytes":  1618
+                        },
+    "fonts/ibm-plex-mono-400-normal.woff2":  {
+                                                 "url":  "https://fonts.gstatic.com/s/ibmplexmono/v20/-F63fjptAgt5VM-kVkqdyU8n1i8q1w.woff2",
+                                                 "sha256":  "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7",
+                                                 "bytes":  14708
+                                             },
+    "fonts/ibm-plex-mono-500-normal.woff2":  {
+                                                 "url":  "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3twJwlBFgg.woff2",
+                                                 "sha256":  "01d285447409c8a588692162439a038b8cbd7871309ee20267b0d2d91c6e8e22",
+                                                 "bytes":  14888
+                                             },
+    "fonts/space-grotesk-400-normal.woff2":  {
+                                                 "url":  "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.woff2",
+                                                 "sha256":  "0640890476fc1198ab4de571fb658de443c4d85b66466ec09534a8737ab1ce9d",
+                                                 "bytes":  22288
+                                             },
+    "fonts/space-grotesk-500-normal.woff2":  {
+                                                 "url":  "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.woff2",
+                                                 "sha256":  "0640890476fc1198ab4de571fb658de443c4d85b66466ec09534a8737ab1ce9d",
+                                                 "bytes":  22288
+                                             },
+    "fonts/space-grotesk-700-normal.woff2":  {
+                                                 "url":  "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.woff2",
+                                                 "sha256":  "0640890476fc1198ab4de571fb658de443c4d85b66466ec09534a8737ab1ce9d",
+                                                 "bytes":  22288
+                                             }
+}

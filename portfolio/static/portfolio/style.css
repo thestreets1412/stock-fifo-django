@@ -16,6 +16,10 @@
      back as light-on-light widgets no stylesheet can reach. */
   color-scheme: dark;
 
+  /* Height of the fixed navbar. Content offset and anchor scrolling both key
+     off this, so they cannot drift apart. */
+  --navbar-height: 76px;
+
   --space-navy: #0a0e1a;
   --cyan: #00f0ff;
   --magenta: #ff2e93;
@@ -31,9 +35,34 @@
   width: 48px;
   height: 48px;
 }
+
+/* Clears the fixed navbar. Was an inline padding-top on <main>, which meant
+   the offset and the navbar's real height had no way to stay in sync. */
+.page-main {
+  padding-top: calc(var(--navbar-height) + var(--space-4));
+  padding-bottom: var(--space-4);
+}
+
+/* Touch targets. 44px is the smallest reliably tappable control. */
+.filter-bar .btn,
+.filter-bar .form-control,
+.filter-bar .form-select {
+  min-height: 44px;
+}
+
+/* Bootstrap 5 ships no responsive width utility, and the filter bar needs
+   full-width buttons while stacked but intrinsic width once it is a row. */
+@media (min-width: 768px) {
+  .w-md-auto {
+    width: auto !important;
+  }
+}
+html {
+  /* Keep anchored targets clear of the fixed navbar. */
+  scroll-padding-top: calc(var(--navbar-height) + var(--space-3));
+}
+
 body {
-  width: auto !important;
-  margin: 40px auto;
   font-family: var(--font-sans);
   color: var(--text);
   background-color: var(--space-navy);

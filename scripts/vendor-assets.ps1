@@ -48,7 +48,9 @@ $DirectAssets = @(
 $BootstrapIconsCssUrl  = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css'
 $BootstrapIconsCssDest = 'bootstrap-icons/bootstrap-icons.min.css'
 
-$GoogleFontsFamilies = 'family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap'
+# Weights must cover every --weight-* token in tokens/typography.css; a weight
+# that is requested but not vendored gets faux-bolded by the browser.
+$GoogleFontsFamilies = 'family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap'
 $GoogleFontsCssUrl    = "https://fonts.googleapis.com/css2?$GoogleFontsFamilies"
 $LocalFontsCssDest    = 'fonts/fonts.css'
 

@@ -1,4 +1,5 @@
 {% extends 'portfolio/base.html' %}
+{% load static %}
 
 {% block title %}Portfolio{% endblock %}
 
@@ -117,7 +118,7 @@
 
 {% block extra_scripts %}
 {% if dashboard.allocation %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="{% static 'portfolio/vendor/chartjs/chart.umd.min.js' %}"></script>
 <script>
   const allocationData = JSON.parse(document.getElementById('allocation-data').textContent);
   new Chart(document.getElementById('allocation-chart'), {

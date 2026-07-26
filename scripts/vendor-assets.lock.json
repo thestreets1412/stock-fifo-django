@@ -45,9 +45,9 @@
                                      "bytes":  205749
                                  },
     "fonts/fonts.css":  {
-                            "url":  "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700\u0026family=IBM+Plex+Mono:wght@400;500\u0026display=swap",
-                            "sha256":  "223768cc175bf94ba1dd8438f49c8d8cc598d2a6d989dc84c8cfeb1e59f6713f",
-                            "bytes":  1618
+                            "url":  "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700\u0026family=IBM+Plex+Mono:wght@400;500;600\u0026display=swap",
+                            "sha256":  "74a512bd7cf544e39f992f6b51316ad1887b9867daa3f05bb7827fe2159486c0",
+                            "bytes":  2264
                         },
     "fonts/ibm-plex-mono-400-normal.woff2":  {
                                                  "url":  "https://fonts.gstatic.com/s/ibmplexmono/v20/-F63fjptAgt5VM-kVkqdyU8n1i8q1w.woff2",
@@ -59,12 +59,22 @@
                                                  "sha256":  "01d285447409c8a588692162439a038b8cbd7871309ee20267b0d2d91c6e8e22",
                                                  "bytes":  14888
                                              },
+    "fonts/ibm-plex-mono-600-normal.woff2":  {
+                                                 "url":  "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3vAOwlBFgg.woff2",
+                                                 "sha256":  "0d1f0b8d0722224e32e9f28261bdc86c79115be73444ae5eceb73976a1bcdf83",
+                                                 "bytes":  15620
+                                             },
     "fonts/space-grotesk-400-normal.woff2":  {
                                                  "url":  "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.woff2",
                                                  "sha256":  "0640890476fc1198ab4de571fb658de443c4d85b66466ec09534a8737ab1ce9d",
                                                  "bytes":  22288
                                              },
     "fonts/space-grotesk-500-normal.woff2":  {
+                                                 "url":  "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.woff2",
+                                                 "sha256":  "0640890476fc1198ab4de571fb658de443c4d85b66466ec09534a8737ab1ce9d",
+                                                 "bytes":  22288
+                                             },
+    "fonts/space-grotesk-600-normal.woff2":  {
                                                  "url":  "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.woff2",
                                                  "sha256":  "0640890476fc1198ab4de571fb658de443c4d85b66466ec09534a8737ab1ce9d",
                                                  "bytes":  22288

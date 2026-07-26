@@ -2,15 +2,6 @@
 
 {% block title %}Portfolio{% endblock %}
 
-{% block extra_head %}
-<style>
-  .stat-card .stat-card__label { font-size: 0.85rem; color: var(--bs-secondary-color); }
-  .stat-card .stat-card__value { font-family: 'IBM Plex Mono', monospace; font-size: 1.4rem; }
-  .gain-value { color: #198754; }
-  .loss-value { color: #dc3545; }
-</style>
-{% endblock %}
-
 {% block content %}
 <h1 class="mb-3">Portfolio Dashboard</h1>
 
@@ -18,7 +9,7 @@
     <div class="col-6 col-lg-3">
         <div class="card stat-card h-100">
             <div class="card-body">
-                <div class="stat-card__label" style="color: var(--text);">Total Portfolio Value</div>
+                <div class="stat-card__label">Total Portfolio Value</div>
                 <div class="stat-card__value">
                     {% if dashboard.total_value_thb is not None %}
                         ฿{{ dashboard.total_value_thb|floatformat:2 }}
@@ -32,7 +23,7 @@
     <div class="col-6 col-lg-3">
         <div class="card stat-card h-100">
             <div class="card-body">
-                <div class="stat-card__label" style="color: var(--text);">Total Cost Basis</div>
+                <div class="stat-card__label">Total Cost Basis</div>
                 <div class="stat-card__value">฿{{ dashboard.total_cost_thb|floatformat:2 }}</div>
             </div>
         </div>
@@ -40,8 +31,8 @@
     <div class="col-6 col-lg-3">
         <div class="card stat-card h-100">
             <div class="card-body">
-                <div class="stat-card__label" style="color: var(--text);">Unrealized Gain/Loss</div>
-                <div class="stat-card__value {% if dashboard.total_unrealized_gain_thb is not None %}{% if dashboard.total_unrealized_gain_thb >= 0 %}gain-value{% else %}loss-value{% endif %}{% endif %}">
+                <div class="stat-card__label">Unrealized Gain/Loss</div>
+                <div class="stat-card__value {% if dashboard.total_unrealized_gain_thb is not None %}{% if dashboard.total_unrealized_gain_thb >= 0 %}value-gain{% else %}value-loss{% endif %}{% endif %}">
                     {% if dashboard.total_unrealized_gain_thb is not None %}
                         {% if dashboard.total_unrealized_gain_thb >= 0 %}+{% endif %}฿{{ dashboard.total_unrealized_gain_thb|floatformat:2 }}
                     {% else %}
@@ -54,8 +45,8 @@
     <div class="col-6 col-lg-3">
         <div class="card stat-card h-100">
             <div class="card-body">
-                <div class="stat-card__label" style="color: var(--text);">Realized Gain/Loss</div>
-                <div class="stat-card__value {% if dashboard.total_realized_gain_thb >= 0 %}gain-value{% else %}loss-value{% endif %}">
+                <div class="stat-card__label">Realized Gain/Loss</div>
+                <div class="stat-card__value {% if dashboard.total_realized_gain_thb >= 0 %}value-gain{% else %}value-loss{% endif %}">
                     {% if dashboard.total_realized_gain_thb >= 0 %}+{% endif %}฿{{ dashboard.total_realized_gain_thb|floatformat:2 }}
                 </div>
             </div>
@@ -90,7 +81,7 @@
                                         &mdash;
                                     {% endif %}
                                 </td>
-                                <td class="{% if row.unrealized_gain_pct is not None %}{% if row.unrealized_gain_pct >= 0 %}gain-value{% else %}loss-value{% endif %}{% endif %}">
+                                <td class="{% if row.unrealized_gain_pct is not None %}{% if row.unrealized_gain_pct >= 0 %}value-gain{% else %}value-loss{% endif %}{% endif %}">
                                     {% if row.unrealized_gain_pct is not None %}
                                         {% if row.unrealized_gain_pct >= 0 %}+{% endif %}{{ row.unrealized_gain_pct|floatformat:1 }}%
                                     {% else %}

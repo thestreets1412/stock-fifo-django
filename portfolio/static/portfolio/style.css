@@ -299,6 +299,20 @@ a:hover {
   color: var(--cyan);
 }
 
+/* ---- Stat cards — dashboard summary tiles. Label recedes, figure dominates. */
+.stat-card__label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  letter-spacing: var(--tracking-wide);
+}
+
+.stat-card__value {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
 /* ---- GainLossBadge — green for gain, red for loss, tabular figures so a
    column of THB amounts lines up. Mirrors reports.py's GAIN_COLOR / LOSS_COLOR. */
 .value-gain,

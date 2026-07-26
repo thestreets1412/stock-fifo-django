@@ -11,6 +11,11 @@
    ========================================================================== */
 
 :root {
+  /* Tells the browser to render native UI -- date pickers, select popups,
+     scrollbars, autofill, spinners -- in dark. Without it those controls come
+     back as light-on-light widgets no stylesheet can reach. */
+  color-scheme: dark;
+
   --space-navy: #0a0e1a;
   --cyan: #00f0ff;
   --magenta: #ff2e93;
@@ -184,7 +189,7 @@ a:hover {
   box-shadow: 0 0 17px rgba(0, 240, 255, 0.25);
 }
 .btn-primary:hover,
-.btn-primary:focus,
+.btn-primary:focus-visible,
 .btn-primary:active {
   background-color: #33f4ff !important;
   border-color: #33f4ff !important;
@@ -198,7 +203,7 @@ a:hover {
   background: transparent;
 }
 .btn-outline-secondary:hover,
-.btn-outline-secondary:focus,
+.btn-outline-secondary:focus-visible,
 .btn-outline-secondary:active {
   color: var(--cyan) !important;
   background-color: rgba(0, 240, 255, 0.07) !important;
@@ -326,6 +331,45 @@ a:hover {
 }
 .value-loss {
   color: var(--loss-red);
+}
+
+/* ---- Keyboard focus ----
+   Hover and focus used to resolve to the same cyan glow, so a keyboard user
+   tabbing through the page had no way to tell where they were. A solid ring
+   is deliberately a different shape from the glow, and :focus-visible keeps
+   it off mouse clicks. */
+a:focus-visible,
+.btn:focus-visible,
+.btn-close:focus-visible,
+.nav-link:focus-visible,
+.navbar-toggler:focus-visible,
+.navbar-brand:focus-visible,
+.dropdown-item:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+/* The date picker glyph inherits colour from color-scheme: dark, so it only
+   needs an affordance, not a filter -- inverting it here would undo that. */
+::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+}
+::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ---- Footer ---- */

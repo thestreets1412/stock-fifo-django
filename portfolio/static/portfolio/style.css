@@ -304,6 +304,18 @@ a:hover {
   color: var(--cyan);
 }
 
+/* ---- Numeric table cells ----
+   Money and share counts get monospaced tabular figures and right alignment,
+   so decimal points stack and you can compare magnitudes down a column by
+   shape alone. Headers take the same class to stay over their column. */
+.cell-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  text-align: right;
+  white-space: nowrap;
+}
+
 /* ---- Stat cards — dashboard summary tiles. Label recedes, figure dominates. */
 .stat-card__label {
   font-size: var(--text-sm);

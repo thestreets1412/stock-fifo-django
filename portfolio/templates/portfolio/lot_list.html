@@ -47,11 +47,11 @@
             <tr>
                 <th>Symbol</th>
                 <th>Buy Date</th>
-                <th>Price (USD)</th>
-                <th>Qty</th>
-                <th>Qty Remaining</th>
-                <th>FX Rate</th>
-                <th>Cost (THB)</th>
+                <th class="cell-num">Price (USD)</th>
+                <th class="cell-num">Qty</th>
+                <th class="cell-num">Qty Remaining</th>
+                <th class="cell-num">FX Rate</th>
+                <th class="cell-num">Cost (THB)</th>
                 <th>Evidence</th>
             </tr>
         </thead>
@@ -60,17 +60,17 @@
             <tr>
                 <td>{{ lot.symbol.ticker }}</td>
                 <td>{{ lot.buy_date }}</td>
-                <td>{{ lot.price_usd }}</td>
-                <td>{{ lot.qty }}</td>
-                <td>
+                <td class="cell-num">{{ lot.price_usd }}</td>
+                <td class="cell-num">{{ lot.qty }}</td>
+                <td class="cell-num">
                     {% if lot.windowed_remaining == 0 %}
                         <span class="text-decoration-line-through text-muted">{{ lot.windowed_remaining }}</span>
                     {% else %}
                         {{ lot.windowed_remaining }}
                     {% endif %}
                 </td>
-                <td>{{ lot.fx_rate_usd_thb }}</td>
-                <td>{{ lot.cost_thb|floatformat:2 }}</td>
+                <td class="cell-num">{{ lot.fx_rate_usd_thb }}</td>
+                <td class="cell-num">{{ lot.cost_thb|floatformat:2 }}</td>
                 <td>
                     {% if lot.evidence %}
                         <a href="{% url 'lot_evidence' lot.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-receipt me-1"></i>View</a>

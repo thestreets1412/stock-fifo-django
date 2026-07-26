@@ -56,12 +56,12 @@
             <tr>
                 <th>Symbol</th>
                 <th>Sell Date</th>
-                <th>Qty Sold</th>
-                <th>Sale Price (USD)</th>
-                <th>Fee (USD)</th>
-                <th>Proceeds (THB)</th>
-                <th>Cost Basis (THB)</th>
-                <th>Capital Gain (THB)</th>
+                <th class="cell-num">Qty Sold</th>
+                <th class="cell-num">Sale Price (USD)</th>
+                <th class="cell-num">Fee (USD)</th>
+                <th class="cell-num">Proceeds (THB)</th>
+                <th class="cell-num">Cost Basis (THB)</th>
+                <th class="cell-num">Capital Gain (THB)</th>
                 <th>Lots Affected</th>
                 <th>Evidence</th>
             </tr>
@@ -71,12 +71,12 @@
             <tr>
                 <td>{{ sale.symbol.ticker }}</td>
                 <td>{{ sale.sell_date }}</td>
-                <td>{{ sale.qty_sold }}</td>
-                <td>{{ sale.sale_price_usd }}</td>
-                <td>{{ sale.fee_usd }}</td>
-                <td>{{ sale.proceeds_thb|floatformat:2 }}</td>
-                <td>{{ sale.windowed_cost_basis_thb|floatformat:2 }}</td>
-                <td>
+                <td class="cell-num">{{ sale.qty_sold }}</td>
+                <td class="cell-num">{{ sale.sale_price_usd }}</td>
+                <td class="cell-num">{{ sale.fee_usd }}</td>
+                <td class="cell-num">{{ sale.proceeds_thb|floatformat:2 }}</td>
+                <td class="cell-num">{{ sale.windowed_cost_basis_thb|floatformat:2 }}</td>
+                <td class="cell-num">
                     {% if sale.windowed_capital_gain_thb >= 0 %}
                         <span class="value-gain">+{{ sale.windowed_capital_gain_thb|floatformat:2 }}</span>
                     {% else %}
@@ -84,11 +84,16 @@
                     {% endif %}
                 </td>
                 <td>
+                    {% with allocations=sale.allocations.all %}
                     <ul class="list-unstyled mb-0 small">
-                        {% for allocation in sale.allocations.all %}
+                        {% for allocation in allocations|slice:":3" %}
                             <li>{{ allocation.lot.buy_date }} &mdash; {{ allocation.qty_allocated }} shares</li>
                         {% endfor %}
+                        {% if allocations|length > 3 %}
+                            <li class="text-muted">+{{ allocations|length|add:"-3" }} more</li>
+                        {% endif %}
                     </ul>
+                    {% endwith %}
                 </td>
                 <td>
                     {% if sale.evidence %}

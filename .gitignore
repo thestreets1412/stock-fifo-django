@@ -13,10 +13,5 @@ __pycache__/
 agent/
 *.pyc
 CLAUDE.md
-<<<<<<< HEAD
 .planning/
-.superpowers/
-docs/
-=======
 db.sqlite3
->>>>>>> bootstrap-fw

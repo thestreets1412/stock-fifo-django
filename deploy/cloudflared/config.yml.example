@@ -1,0 +1,18 @@
+# Cloudflare Tunnel ingress for the Stock FIFO Tracker.
+#
+# Copy to /etc/cloudflared/config.yml on the Pi and replace <TUNNEL-ID> with
+# the UUID printed by `cloudflared tunnel create stock-fifo`.
+#
+# Only the app is exposed. The Samba share on port 445 is deliberately absent:
+# SMB over the internet is a known ransomware vector and this tunnel is HTTP
+# oriented. The share stays LAN-only.
+
+tunnel: <TUNNEL-ID>
+credentials-file: /etc/cloudflared/<TUNNEL-ID>.json
+
+ingress:
+  # Gunicorn listens on loopback only. cloudflared is its sole client.
+  - hostname: fifo-by-minotaur.uk
+    service: http://127.0.0.1:8000
+  # Anything not matched above is refused rather than silently proxied.
+  - service: http_status:404

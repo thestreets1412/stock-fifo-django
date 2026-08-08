@@ -29,14 +29,13 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
 
-# Security (production hardening — Phase 1: Cloudflare Tunnel deployment)
-# Real origin is supplied from .env in Phase 5; empty default is fail-closed.
+# Security (production hardening — Cloudflare Tunnel deployment).
+# Real origin is supplied from .env; the empty default is fail-closed.
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=Csv())
-# WARNING (T-01-01): trusting X-Forwarded-Proto is only safe once Gunicorn is
-# bound to loopback-only (Phase 2). Until that binding lands (or if it is ever
-# reverted/misconfigured), a network-adjacent client can forge this header and
-# bypass SECURE_SSL_REDIRECT. Do not expose this settings module to a
-# non-loopback interface before Phase 2's loopback binding is verified.
+# Trusting X-Forwarded-Proto is only sound because Gunicorn binds 127.0.0.1
+# only, making the local cloudflared process its sole possible client. If the
+# bind is ever widened to 0.0.0.0, a network-adjacent client can forge this
+# header and defeat SECURE_SSL_REDIRECT and the secure-cookie flags.
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
@@ -167,14 +166,3 @@ MESSAGE_TAGS = {
     messages.WARNING: 'alert-warning',
     messages.ERROR: 'alert-danger',
 }
-
-CSRF_TRUSTED_ORIGINS = config(
-    'CSRF_TRUSTED_ORIGINS',
-    default='https://placeholder.example.com',
-    cast=Csv(),
-)
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True

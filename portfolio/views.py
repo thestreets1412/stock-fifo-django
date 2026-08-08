@@ -66,14 +66,11 @@ class LotListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        date_from = parse_date_param(self.request.GET.get('date_from'))
-        date_to = parse_date_param(self.request.GET.get('date_to'))
         context['symbols'] = Symbol.objects.all()
         context['selected_symbol_id'] = self.request.GET.get('symbol', '')
         context['selected_date_from'] = self.request.GET.get('date_from', '')
         context['selected_date_to'] = self.request.GET.get('date_to', '')
         context['form'] = StockLotForm()
-        context['dashboard'] = build_dashboard_summary(self.request.user, date_from, date_to)
         return context
 
 class StockLotCreateView(LoginRequiredMixin, CreateView):

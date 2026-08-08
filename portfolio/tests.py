@@ -528,7 +528,9 @@ class LotListTemplateTests(TestCase):
         # symbol select no longer auto-submits on change (replaced by an explicit Search button)
         tag_end = content.index('>', symbol_select_start)
         self.assertNotIn('onchange="this.form.submit()"', content[symbol_select_start:tag_end])
-        self.assertIn('onclick="this.form.submit()"', content)
+        # a native submit button, so Enter from inside any filter field works too
+        self.assertIn('type="submit"', content)
+        self.assertNotIn('onclick="this.form.submit()"', content)
 
 
 class SaleListTemplateTests(TestCase):

@@ -1,6 +1,5 @@
-@import url("tokens/colors.css");
-@import url("tokens/typography.css");
-@import url("tokens/spacing.css");
+/* Token files are linked directly from base.html, ahead of this stylesheet.
+   They used to be @imported here, which cost a serial round trip each. */
 
 /* ==========================================================================
    Quantum Neon theme — dark glassmorphism override of Bootstrap 5 defaults.
@@ -11,6 +10,15 @@
    ========================================================================== */
 
 :root {
+  /* Tells the browser to render native UI -- date pickers, select popups,
+     scrollbars, autofill, spinners -- in dark. Without it those controls come
+     back as light-on-light widgets no stylesheet can reach. */
+  color-scheme: dark;
+
+  /* Height of the fixed navbar. Content offset and anchor scrolling both key
+     off this, so they cannot drift apart. */
+  --navbar-height: 76px;
+
   --space-navy: #0a0e1a;
   --cyan: #00f0ff;
   --magenta: #ff2e93;
@@ -26,9 +34,34 @@
   width: 48px;
   height: 48px;
 }
+
+/* Clears the fixed navbar. Was an inline padding-top on <main>, which meant
+   the offset and the navbar's real height had no way to stay in sync. */
+.page-main {
+  padding-top: calc(var(--navbar-height) + var(--space-4));
+  padding-bottom: var(--space-4);
+}
+
+/* Touch targets. 44px is the smallest reliably tappable control. */
+.filter-bar .btn,
+.filter-bar .form-control,
+.filter-bar .form-select {
+  min-height: 44px;
+}
+
+/* Bootstrap 5 ships no responsive width utility, and the filter bar needs
+   full-width buttons while stacked but intrinsic width once it is a row. */
+@media (min-width: 768px) {
+  .w-md-auto {
+    width: auto !important;
+  }
+}
+html {
+  /* Keep anchored targets clear of the fixed navbar. */
+  scroll-padding-top: calc(var(--navbar-height) + var(--space-3));
+}
+
 body {
-  width: auto !important;
-  margin: 40px auto;
   font-family: var(--font-sans);
   color: var(--text);
   background-color: var(--space-navy);
@@ -184,7 +217,7 @@ a:hover {
   box-shadow: 0 0 17px rgba(0, 240, 255, 0.25);
 }
 .btn-primary:hover,
-.btn-primary:focus,
+.btn-primary:focus-visible,
 .btn-primary:active {
   background-color: #33f4ff !important;
   border-color: #33f4ff !important;
@@ -198,7 +231,7 @@ a:hover {
   background: transparent;
 }
 .btn-outline-secondary:hover,
-.btn-outline-secondary:focus,
+.btn-outline-secondary:focus-visible,
 .btn-outline-secondary:active {
   color: var(--cyan) !important;
   background-color: rgba(0, 240, 255, 0.07) !important;
@@ -299,6 +332,32 @@ a:hover {
   color: var(--cyan);
 }
 
+/* ---- Numeric table cells ----
+   Money and share counts get monospaced tabular figures and right alignment,
+   so decimal points stack and you can compare magnitudes down a column by
+   shape alone. Headers take the same class to stay over their column. */
+.cell-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ---- Stat cards — dashboard summary tiles. Label recedes, figure dominates. */
+.stat-card__label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  letter-spacing: var(--tracking-wide);
+}
+
+.stat-card__value {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
 /* ---- GainLossBadge — green for gain, red for loss, tabular figures so a
    column of THB amounts lines up. Mirrors reports.py's GAIN_COLOR / LOSS_COLOR. */
 .value-gain,
@@ -312,6 +371,45 @@ a:hover {
 }
 .value-loss {
   color: var(--loss-red);
+}
+
+/* ---- Keyboard focus ----
+   Hover and focus used to resolve to the same cyan glow, so a keyboard user
+   tabbing through the page had no way to tell where they were. A solid ring
+   is deliberately a different shape from the glow, and :focus-visible keeps
+   it off mouse clicks. */
+a:focus-visible,
+.btn:focus-visible,
+.btn-close:focus-visible,
+.nav-link:focus-visible,
+.navbar-toggler:focus-visible,
+.navbar-brand:focus-visible,
+.dropdown-item:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+/* The date picker glyph inherits colour from color-scheme: dark, so it only
+   needs an affordance, not a filter -- inverting it here would undo that. */
+::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+}
+::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ---- Footer ---- */

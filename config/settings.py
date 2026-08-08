@@ -60,6 +60,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -136,6 +137,23 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Django 5.1 removed STATICFILES_STORAGE in favour of STORAGES; setting the old
+# name is silently ignored, which left WhiteNoise's compression and manifest
+# hashing switched off (no gzip/brotli, no immutable far-future caching).
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
+
+# Fall back to the un-hashed name when a file is absent from the manifest, so
+# tests and `runserver` work without a collectstatic pass first. collectstatic
+# still fails loudly on broken references, which is where we want to catch them.
+WHITENOISE_MANIFEST_STRICT = False
+
 LOGIN_REDIRECT_URL = 'lot_list'
 LOGIN_URL = 'login'
 
@@ -149,3 +167,14 @@ MESSAGE_TAGS = {
     messages.WARNING: 'alert-warning',
     messages.ERROR: 'alert-danger',
 }
+
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='https://placeholder.example.com',
+    cast=Csv(),
+)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True

@@ -87,4 +87,145 @@ portfolio/
   views.py                      List, create, evidence, and report views
   templates/portfolio/          Lot list, sale list, buy/sell forms, evidence pages
   static/portfolio/             Bootstrap overrides, AJAX modal-form JS
+scripts/
+  backup.sh                   Nightly snapshot + USB mirror, runs on the Pi
+  pull-pi-backup.ps1          Pulls those snapshots to the laptop
 ```
+
+## Backups
+
+The ledger is a single SQLite file, so it is kept in three places. `scripts/backup.sh`
+on the Pi is the only thing that creates backups; every other copy is a mirror of what
+it produced.
+
+| Copy | Location | Created by | Kept |
+|---|---|---|---|
+| 1 | `/home/minotaur/backups` (Pi SD card) | `stock-fifo-backup.timer`, nightly 20:00 | 14 days |
+| 2 | `/mnt/backup/stock-fifo` (USB drive on the Pi) | same script, same run | 60 days |
+| 3 | `D:\Backups\stock-fifo` (laptop) | Task Scheduler `StockFifo-BackupPull`, daily 20:00 | 60 days |
+
+Filenames are `db_YYYY-MM-DD_HHMMSS.sqlite3` and `media_YYYY-MM-DD_HHMMSS.tar.gz`.
+
+**Snapshots use `sqlite3 ".backup"`, never `cp`.** A plain copy of a database with an
+active writer produces a silently corrupt file. Every snapshot is checked with
+`PRAGMA integrity_check` and discarded if it fails.
+
+The USB mirror is guarded by `mountpoint -q`. If the drive is absent the script logs a
+warning and skips it rather than writing to `/mnt/backup` on the SD card — which would
+fill the very disk the backups exist to survive. `/etc/fstab` uses `nofail` so a
+missing or failed drive cannot stop the Pi from booting.
+
+The laptop pull tries two SSH aliases in order (`pi-stockfifo` via mDNS, then
+`pi-stockfifo-ip`). Neither route is reliable alone: mDNS breaks on mobile hotspots
+that limit multicast, and the raw IP breaks on DHCP lease changes. If both fail the
+script exits 0 — a laptop away from home is normal, not a failure.
+
+### Checking that it still works
+
+```bash
+systemctl list-timers stock-fifo-backup.timer          # on the Pi
+journalctl -u stock-fifo-backup.service -n 20          # on the Pi
+```
+
+```powershell
+Get-Content D:\Backups\stock-fifo-pull.log -Tail 5     # on the laptop
+```
+
+### Restore procedure
+
+```powershell
+$newest = Get-ChildItem D:\Backups\stock-fifo -Filter "db_*.sqlite3" |
+          Sort-Object LastWriteTime -Descending | Select-Object -First 1
+New-Item -ItemType Directory -Force -Path D:\restore-test | Out-Null
+Copy-Item $newest.FullName D:\restore-test\db.sqlite3
+```
+
+Verify before trusting it, then compare the counts against the live database:
+
+```powershell
+.venv\Scripts\python.exe -c "import sqlite3; c=sqlite3.connect(r'D:\restore-test\db.sqlite3'); print(c.execute('PRAGMA integrity_check').fetchone()[0]); print([c.execute(f'SELECT COUNT(*) FROM {t}').fetchone()[0] for t in ('portfolio_stocklot','portfolio_sale','portfolio_saleallocation')])"
+```
+
+```bash
+sqlite3 ~/stock-fifo-django/db.sqlite3 "SELECT COUNT(*) FROM portfolio_stocklot; SELECT COUNT(*) FROM portfolio_sale; SELECT COUNT(*) FROM portfolio_saleallocation;"
+```
+
+Evidence images restore by extracting the matching archive over the project root:
+
+```bash
+tar -xzf media_YYYY-MM-DD_HHMMSS.tar.gz -C ~/stock-fifo-django
+```
+
+**Drill last passed: 2026-07-26** — restored the laptop copy of
+`db_2026-07-25_233128.sqlite3`, integrity `ok`, counts 28 lots / 21 sales /
+38 allocations matching the live database exactly, media archive holding 8 evidence
+images. An untested backup is an assumption; rerun this drill after any change to the
+backup scripts.
+
+### Known gaps
+
+- **No off-site copy.** Copies 1 and 2 sit in the same room and copy 3 travels with the
+  laptop. A fire while the laptop is home destroys all three. Closing this needs an
+  encrypted cloud upload.
+- **No failure alert.** A broken backup announces itself only in `journalctl` and the
+  pull log. Check them occasionally.
+- **Backups are unencrypted.** Fine while every copy is on hardware you physically
+  control; not fine the moment one goes to a cloud provider.
+
+## Home NAS share
+
+The USB drive attached to the Pi doubles as a LAN file share for moving documents
+between the household laptops, so files no longer travel by flash drive.
+
+- **Address:** `\\stockfifo.local\nas` (falls back to `\\<pi-ip>\nas` if mDNS doesn't
+  resolve on a given machine — see Known gaps below), mapped to `Z:` on both laptops
+- **Account:** `nasuser` — a Samba-only account, unrelated to the Pi's Linux login
+- **On disk:** `/mnt/backup/nas`, a sibling of the backup folder `/mnt/backup/stock-fifo`
+  on the same exFAT drive
+- **Config:** `deploy/samba/nas-share.conf`, pulled to the Pi by `git pull` and wired in
+  by an `include =` line in `/etc/samba/smb.conf`, so the share definition is
+  version-controlled instead of hand-edited on the Pi
+
+### What the share deliberately does not expose
+
+The drive is exFAT, which stores no Unix permissions, so Samba's `path =` directive is
+the only thing separating the share from the FIFO ledger backups on the same filesystem.
+A few rules keep that wall intact:
+
+- No share ever points at `/mnt/backup` — only at `/mnt/backup/nas`. Verified: browsing
+  `\\stockfifo.local\stock-fifo` and `\\stockfifo.local\minotaur` both fail with "network
+  name cannot be found," and the server root lists only `nas`.
+- `[homes]` is disabled. The Debian package shipped it enabled by default on this
+  install — it would have exposed the live `db.sqlite3` and the 14-day snapshot folder
+  under `/home/minotaur` (read-only, but reachable by any authenticated user). Disabled
+  by replacing the whole `smb.conf` global section rather than trying to comment out one
+  block.
+- `smbd` binds only to `127.0.0.1` and the Pi's LAN address, listed as explicit IPs
+  rather than the interface name `wlan0`. Naming the interface also bound Samba to its
+  IPv6 global address, which on a network where the ISP hands out routable IPv6 (no
+  NAT, unlike IPv4) would have put port 445 within reach of the open internet — a known
+  ransomware vector. `hosts allow` is scoped to the home subnet regardless.
+- The share is never routed through the Cloudflare Tunnel. LAN only.
+
+### Recycle bin
+
+Deletions over SMB are diverted into `.recycle` inside the share instead of being
+destroyed outright — Explorer offers no undo over a network share.
+`/etc/tmpfiles.d/nas-recycle.conf` empties anything older than 30 days via the default
+`systemd-tmpfiles-clean.timer`.
+
+### If the drive is unplugged
+
+Verified by physically removing the drive: Samba refuses the share because its path no
+longer exists, and the nightly backup logs `WARN: /mnt/backup is not mounted, USB mirror
+skipped`. Neither writes to the SD card — `/mnt/backup` reverts to an empty directory
+owned by `root`, and free space on the SD card is unchanged. The web app keeps running
+because the fstab entry carries `nofail`.
+
+### Known gaps
+
+- **mDNS (`.local`) resolution is unreliable across clients.** It worked from one
+  Windows 10 laptop and failed on a Windows 11 laptop with `DNS name does not exist`,
+  while the plain IP address worked on both. Likely cause: Windows suppresses multicast
+  discovery when a network connection is categorized `Public` instead of `Private`.
+  Unresolved — using the IP address is a reliable fallback in the meantime.

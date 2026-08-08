@@ -172,6 +172,41 @@ backup scripts.
 - **Backups are unencrypted.** Fine while every copy is on hardware you physically
   control; not fine the moment one goes to a cloud provider.
 
+## Public access
+
+The app is reachable from anywhere at **https://fifo-by-minotaur.uk**, through a
+Cloudflare Tunnel. No router port is forwarded and the home IP is never in DNS —
+`cloudflared` on the Pi dials out to Cloudflare's edge and traffic returns down
+that connection.
+
+- **Identity gate:** Cloudflare Access sits in front of the whole hostname. An
+  unauthenticated request never reaches Django; it gets a one-time PIN prompt.
+  Only the owner's email address is on the allow policy. Session lasts 24 hours.
+- **Origin:** Gunicorn binds `127.0.0.1:8000` only. `cloudflared` is its sole
+  possible client, which is what makes trusting the `X-Forwarded-Proto` header
+  safe — Django learns the request was HTTPS from a header only a local process
+  can set.
+- **Ingress config:** `deploy/cloudflared/config.yml.example`, copied to
+  `/etc/cloudflared/config.yml` on the Pi. Version-controlled for the same
+  reason the Samba share is — the device is never the source of truth.
+- **The NAS share is not exposed.** Ingress has exactly one hostname rule and a
+  catch-all 404. SMB stays on the LAN.
+
+### LAN access no longer works
+
+`SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE` and `SECURE_SSL_REDIRECT` are all
+active whenever `DEBUG=False`, so `http://<pi-ip>:8000` redirects to HTTPS and
+the browser refuses to send session cookies over plain HTTP. This is deliberate.
+Use the domain — it works on the home WiFi exactly as it does anywhere else.
+
+### Known gaps
+
+- **`/media/` has no authentication check of its own.** Cloudflare Access is
+  what protects the evidence photos, not Django. See
+  `.planning/todos/pending/unauthenticated-media-endpoint.md`.
+- **The tunnel is a single point of failure.** If Cloudflare Access or the free
+  tunnel tier has an outage, there is no LAN fallback by design.
+
 ## Home NAS share
 
 The USB drive attached to the Pi doubles as a LAN file share for moving documents

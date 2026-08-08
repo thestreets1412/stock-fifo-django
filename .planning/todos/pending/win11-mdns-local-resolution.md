@@ -24,3 +24,10 @@ Then retry `\\stockfifo.local\nas` from the Win11 machine.
 Trade-off of leaving this unfixed: the IP-based `Z:` mapping breaks if the Pi's DHCP
 lease changes. `.local` would survive that. Low urgency since the lease has been stable
 so far — see [[nas-samba-on-backup-drive]].
+
+## Update 2026-08-08
+
+Lower priority still. The app moved to `https://fifo-by-minotaur.uk` and no
+longer depends on `.local` resolution at all. This todo now only affects
+reaching the Samba share by name — `\\10.15.30.131\nas` remains the reliable
+route on the Win11 machine.

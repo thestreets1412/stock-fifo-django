@@ -1,0 +1,71 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-08-08T07:24:25.580Z",
+  "phase": "5",
+  "phase_name": "Domain, Tunnel & Go-Live",
+  "phase_dir": "(none — executed via docs/superpowers/plans/, not .planning/phases/)",
+  "plan": 1,
+  "task": 7,
+  "total_tasks": 7,
+  "status": "complete",
+  "completed_tasks": [
+    {"id": 1, "name": "Capture the Pi's real state (read-only recon)", "status": "done", "commit": null},
+    {"id": 2, "name": "Reconcile main and bootstrap-fw", "status": "done", "commit": "e495618"},
+    {"id": 3, "name": "Add tunnel config to the repo", "status": "done", "commit": "4ba5730"},
+    {"id": 4, "name": "Move the Pi onto merged main", "status": "done", "commit": null},
+    {"id": 5, "name": "Create the tunnel and prove it before making it permanent", "status": "done", "commit": null},
+    {"id": 6, "name": "Make it permanent and put Access in front", "status": "done", "commit": null},
+    {"id": 7, "name": "Prove it survives a reboot, then write it down", "status": "done", "commit": "5460cdb"}
+  ],
+  "remaining_tasks": [],
+  "blockers": [],
+  "async_jobs": [],
+  "human_actions_pending": [],
+  "decisions": [
+    {
+      "decision": "Merged bootstrap-fw into main keeping main's DEBUG-gated security block and bootstrap-fw's everything-else",
+      "rationale": "Two branches had independently implemented the same production-hardening milestone by different routes. main had better settings semantics (not DEBUG gating, fail-closed CSRF default, tests_deploy.py); bootstrap-fw had Gunicorn, WhiteNoise, backups, Samba, vendored assets and all recent UI work. Neither side alone was deployable.",
+      "phase": "5"
+    },
+    {
+      "decision": "Apex hostname only (fifo-by-minotaur.uk), no www, no subdomain",
+      "rationale": "Cloudflare CNAME flattening handles the apex; one hostname means one ingress rule, one CSRF origin, one Access application. Fewer moving parts to keep in sync.",
+      "phase": "5"
+    },
+    {
+      "decision": "Cloudflare Access with one-time PIN by email, single-address allowlist",
+      "rationale": "No external identity provider to configure or debug. Free tier. Also the mitigation for the unauthenticated /media/ route — the Access application covers the whole hostname with a blank path, so evidence photos sit behind the identity gate too.",
+      "phase": "5"
+    },
+    {
+      "decision": "Dropped plain-HTTP LAN access deliberately",
+      "rationale": "SESSION_COOKIE_SECURE / CSRF_COOKIE_SECURE / SECURE_SSL_REDIRECT are all 'not DEBUG', so http://<pi-ip>:8000 cannot hold a session. Adding an env-driven escape hatch would mean session cookies travelling in the clear on the home WiFi. The domain works on the home network exactly as it does anywhere else, so the fallback buys nothing.",
+      "phase": "5"
+    },
+    {
+      "decision": "Tunnel ingress lives in the repo at deploy/cloudflared/config.yml.example",
+      "rationale": "Same config-as-code pattern already used for deploy/samba/nas-share.conf. The Pi is never the source of truth; it receives config by git pull and substitutes only the tunnel UUID.",
+      "phase": "5"
+    },
+    {
+      "decision": "Gunicorn ExecStart gained --threads 4 --timeout 60 --access-logfile - --error-logfile -",
+      "rationale": "The unit had no timeout at all, so Gunicorn's 30s default applied. The dashboard fetches live prices through yfinance and can exceed that, killing a worker mid-request and returning 502.",
+      "phase": "5"
+    },
+    {
+      "decision": "Deleted origin/develop and origin/installation",
+      "rationale": "Both measured 0 commits ahead of bootstrap-fw — strict ancestors with nothing unique. Leaving them invites a wrong-branch deploy later. Tag pre-merge-2026-08-08 remains as the rollback point.",
+      "phase": "5"
+    },
+    {
+      "decision": "HSTS emitted only by Django, never also by the Cloudflare dashboard",
+      "rationale": "Two sources for one header is a configuration trap. Django already sends it with includeSubDomains and preload.",
+      "phase": "5"
+    }
+  ],
+  "uncommitted_files": [
+    "docs/reports/2026-08-08-tunnel-go-live-report.html (docs/ is gitignored)"
+  ],
+  "next_action": "Nothing is in flight. Before planning any new work, reconcile .planning/STATE.md and .planning/ROADMAP.md with reality — they still describe Phases 2-5 as not started, but all of that work is done and running in production.",
+  "context_notes": "Milestone is complete and verified in production at https://fifo-by-minotaur.uk. The session's real difficulty was not the tunnel — it was discovering that the deployable code did not exist in one place. Two parallel planning systems (.planning/ GSD phases on main, docs/superpowers/plans/ on bootstrap-fw) had each implemented parts of the same milestone. That divergence is now resolved in the code but NOT in the planning documents, which is the single biggest trap for the next session."
+}
